@@ -52,6 +52,7 @@ interface FinancialState {
   getTotalIncome: () => number
   getTotalExpenses: () => number
   getBudgetedExpenses: () => number
+  getTotalBudgetAmount: () => number 
   getBalance: () => number
   getSpendingByCategory: () => { [key: string]: number }
   getBudgetStatus: () => { [key: string]: { spent: number; budgeted: number; remaining: number } }
@@ -126,6 +127,10 @@ export const useFinancialStore = create<FinancialState>()(
         return Math.abs(transactions
           .filter(t => t.type === 'expense' && budgetCategories.includes(t.category))
           .reduce((sum, t) => sum + t.amount, 0))
+      },
+      getTotalBudgetAmount: () => {
+        const { budgets } = get()
+          return budgets.reduce((sum, budget) => sum + budget.budgeted, 0)
       },
       // Computed values
       getTotalIncome: () => {
