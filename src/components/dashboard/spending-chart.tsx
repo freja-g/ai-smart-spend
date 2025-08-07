@@ -20,10 +20,10 @@ allTransactions.forEach((tx: any) => {
   }
 
   if (tx.type === 'income') {
-    monthlyTotals[month].income += tx.amount
-  } else if (tx.type === 'expense') {
-    monthlyTotals[month].expenses += tx.amount
-  }
+  monthlyTotals[month].income += tx.amount
+} else if (tx.type === 'expense') {
+  monthlyTotals[month].expenses += Math.abs(tx.amount)
+}
 })
 
 // Convert to array
