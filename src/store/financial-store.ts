@@ -31,7 +31,7 @@ interface FinancialState {
   transactions: Transaction[]
   budgets: BudgetItem[]
   goals: SavingsGoal[]
-  
+  monthlyBudget: number
   // Transaction actions
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void
   deleteTransaction: (id: string) => void
@@ -41,6 +41,7 @@ interface FinancialState {
   addBudget: (budget: Omit<BudgetItem, 'id'>) => void
   updateBudget: (id: string, budget: Partial<BudgetItem>) => void
   deleteBudget: (id: string) => void
+  setMonthlyBudget: (amount: number) => void
   
   // Goal actions
   addGoal: (goal: Omit<SavingsGoal, 'id'>) => void
@@ -50,6 +51,7 @@ interface FinancialState {
   // Computed values
   getTotalIncome: () => number
   getTotalExpenses: () => number
+  getBudgetedExpenses: () => number
   getBalance: () => number
   getSpendingByCategory: () => { [key: string]: number }
   getBudgetStatus: () => { [key: string]: { spent: number; budgeted: number; remaining: number } }
@@ -59,11 +61,9 @@ export const useFinancialStore = create<FinancialState>()(
   persist(
     (set, get) => ({
       transactions: [],
-      
       budgets: [],
-      
       goals: [],
-
+      monthlyBudget: 0,
       // Transaction actions
       addTransaction: (transaction) => set((state) => ({
         transactions: [
@@ -117,7 +117,16 @@ export const useFinancialStore = create<FinancialState>()(
       deleteGoal: (id) => set((state) => ({
         goals: state.goals.filter(g => g.id !== id)
       })),
+      setMonthlyBudget: (amount) => set({ monthlyBudget: amount }),
 
+      getBudgetedExpenses: () => {
+        const { transactions, budgets } = get()
+        const budgetCategories = budgets.map(b => b.category)
+        
+        return Math.abs(transactions
+          .filter(t => t.type === 'expense' && budgetCategories.includes(t.category))
+          .reduce((sum, t) => sum + t.amount, 0))
+      },
       // Computed values
       getTotalIncome: () => {
         const { transactions } = get()
@@ -172,7 +181,8 @@ export const useFinancialStore = create<FinancialState>()(
       partialize: (state) => ({
         transactions: state.transactions,
         budgets: state.budgets,
-        goals: state.goals
+        goals: state.goals,
+        monthlyBudget: state.monthlyBudget
       })
     }
   )
