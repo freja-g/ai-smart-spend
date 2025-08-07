@@ -26,7 +26,7 @@ export function BudgetView() {
 
   const spendingByCategory = getSpendingByCategory()
   const budgetStatus = getBudgetStatus()
-
+    const remaining = budget.budgeted - budget.spent;
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
