@@ -43,42 +43,28 @@ export function ExpensesView() {
       ? -Math.abs(parseFloat(formData.amount))
       : Math.abs(parseFloat(formData.amount))
 
-    const transactionData = {
+    addTransaction({
       description: formData.description,
       amount,
       category: formData.category,
       date: new Date(),
       type: formData.type
-    }
-
-    addTransaction(transactionData).then(() => {
-      toast({
-        title: "Transaction added",
-        description: `${formData.type === "income" ? "Income" : "Expense"} of Ksh. ${Math.abs(amount).toLocaleString()} has been recorded.`
-      })
-      setFormData({ description: "", amount: "", category: "", type: "expense" })
-      setIsAdding(false)
-    }).catch((error) => {
-      toast({
-        title: "Error",
-        description: "Failed to add transaction. Please try again.",
-        variant: "destructive"
-      })
     })
+
+    toast({
+      title: "Transaction added",
+      description: `${formData.type === "income" ? "Income" : "Expense"} of Ksh. ${Math.abs(amount).toLocaleString()} has been recorded.`
+    })
+
+    setFormData({ description: "", amount: "", category: "", type: "expense" })
+    setIsAdding(false)
   }
 
   const handleDelete = (id: string, description: string) => {
-    deleteTransaction(id).then(() => {
-      toast({
-        title: "Transaction deleted",
-        description: `${description} has been removed.`
-      })
-    }).catch((error) => {
-      toast({
-        title: "Error",
-        description: "Failed to delete transaction. Please try again.",
-        variant: "destructive"
-      })
+    deleteTransaction(id)
+    toast({
+      title: "Transaction deleted",
+      description: `${description} has been removed.`
     })
   }
 

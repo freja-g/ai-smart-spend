@@ -38,27 +38,19 @@ export function QuickActions() {
       return
     }
 
-    const transactionData = {
+    addTransaction({
       description: transactionForm.description,
       amount: transactionForm.type === "expense" ? -Math.abs(parseFloat(transactionForm.amount)) : Math.abs(parseFloat(transactionForm.amount)),
       category: transactionForm.category,
       date: new Date(),
       type: transactionForm.type
-    }
+    })
 
-    addTransaction(transactionData).then(() => {
-      setTransactionForm({ description: "", amount: "", category: "", type: "expense" })
-      setIsAddTransactionOpen(false)
-      toast({
-        title: "Success",
-        description: "Transaction added successfully"
-      })
-    }).catch((error) => {
-      toast({
-        title: "Error",
-        description: "Failed to add transaction. Please try again.",
-        variant: "destructive"
-      })
+    setTransactionForm({ description: "", amount: "", category: "", type: "expense" })
+    setIsAddTransactionOpen(false)
+    toast({
+      title: "Success",
+      description: "Transaction added successfully"
     })
   }
 
@@ -72,26 +64,18 @@ export function QuickActions() {
       return
     }
 
-    const goalData = {
+    addGoal({
       name: goalForm.name,
       targetAmount: parseFloat(goalForm.targetAmount),
       currentAmount: 0,
       deadline: new Date(goalForm.deadline)
-    }
+    })
 
-    addGoal(goalData).then(() => {
-      setGoalForm({ name: "", targetAmount: "", deadline: "" })
-      setIsAddGoalOpen(false)
-      toast({
-        title: "Success",
-        description: "Savings goal created successfully"
-      })
-    }).catch((error) => {
-      toast({
-        title: "Error",
-        description: "Failed to create goal. Please try again.",
-        variant: "destructive"
-      })
+    setGoalForm({ name: "", targetAmount: "", deadline: "" })
+    setIsAddGoalOpen(false)
+    toast({
+      title: "Success",
+      description: "Savings goal created successfully"
     })
   }
 

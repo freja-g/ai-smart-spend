@@ -8,50 +8,17 @@ import { FinancialTrends } from "./financial-trends"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus,FileUp,FileDown, Target, RefreshCw } from "lucide-react"
+import { Plus,FileUp,FileDown, Target } from "lucide-react"
 import { useFinancialStore } from "@/store/financial-store"
-import { useToast } from "@/hooks/use-toast"
-import { useState } from "react"
 
 export function DashboardView() {
-  const { transactions, budgets, goals, syncData, isLoading } = useFinancialStore()
-  const { toast } = useToast()
-  const [isSyncing, setIsSyncing] = useState(false)
+  const { transactions, budgets, goals } = useFinancialStore()
   const hasData = transactions.length > 0 || budgets.length > 0 || goals.length > 0
 
-  const handleSync = async () => {
-    setIsSyncing(true)
-    try {
-      await syncData()
-      toast({
-        title: "Data synced",
-        description: "Your financial data has been synchronized across all devices."
-      })
-    } catch (error) {
-      toast({
-        title: "Sync failed",
-        description: "Failed to sync data. Please check your connection and try again.",
-        variant: "destructive"
-      })
-    } finally {
-      setIsSyncing(false)
-    }
-  }
   if (!hasData) {
     return (
       <ScrollArea className="h-full">
         <div className="p-4 pb-20">
-          <div className="flex justify-end mb-4">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleSync}
-              disabled={isSyncing || isLoading}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? 'Syncing...' : 'Sync Data'}
-            </Button>
-          </div>
           <Card className="text-center py-12">
             <CardHeader>
               <CardTitle className="text-2xl mb-2">Welcome to SmartSpend!</CardTitle>
@@ -114,18 +81,6 @@ export function DashboardView() {
   return (
     <ScrollArea className="h-full">
       <div className="pb-20"> {/* Bottom padding for mobile nav */}
-        <div className="flex justify-end p-4 pb-0">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleSync}
-            disabled={isSyncing || isLoading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-            {isSyncing ? 'Syncing...' : 'Sync Data'}
-          </Button>
-        </div>
-        
         <FinancialOverview />
         
         <div className="p-4 space-y-4">

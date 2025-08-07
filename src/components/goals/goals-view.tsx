@@ -33,28 +33,21 @@ export function GoalsView() {
       return
     }
 
-    const goalData = {
+    addGoal({
       name: formData.name,
       targetAmount: parseFloat(formData.targetAmount),
       currentAmount: 0,
       deadline: new Date(formData.deadline),
       description: formData.description
-    }
-
-    addGoal(goalData).then(() => {
-      toast({
-        title: "Goal created",
-        description: `Your goal "${formData.name}" has been added.`
-      })
-      setFormData({ name: "", targetAmount: "", deadline: "", description: "" })
-      setIsAdding(false)
-    }).catch((error) => {
-      toast({
-        title: "Error",
-        description: "Failed to create goal. Please try again.",
-        variant: "destructive"
-      })
     })
+
+    toast({
+      title: "Goal created",
+      description: `Your goal "${formData.name}" has been added.`
+    })
+
+    setFormData({ name: "", targetAmount: "", deadline: "", description: "" })
+    setIsAdding(false)
   }
 
   const handleAddMoney = (goalId: string, amount: number) => {
@@ -62,32 +55,19 @@ export function GoalsView() {
     if (!goal) return
 
     const newAmount = Math.min(goal.currentAmount + amount, goal.targetAmount)
-    updateGoal(goalId, { currentAmount: newAmount }).then(() => {
-      toast({
-        title: "Progress updated",
-        description: `Added Ksh. ${amount.toLocaleString()} to ${goal.name}`
-      })
-    }).catch((error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update goal progress. Please try again.",
-        variant: "destructive"
-      })
+    updateGoal(goalId, { currentAmount: newAmount })
+
+    toast({
+      title: "Progress updated",
+      description: `Added Ksh. ${amount.toLocaleString()} to ${goal.name}`
     })
   }
 
   const handleDelete = (id: string, name: string) => {
-    deleteGoal(id).then(() => {
-      toast({
-        title: "Goal deleted",
-        description: `${name} has been removed.`
-      })
-    }).catch((error) => {
-      toast({
-        title: "Error",
-        description: "Failed to delete goal. Please try again.",
-        variant: "destructive"
-      })
+    deleteGoal(id)
+    toast({
+      title: "Goal deleted",
+      description: `${name} has been removed.`
     })
   }
 
