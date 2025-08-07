@@ -283,7 +283,9 @@ export function BudgetView() {
                           {remaining >= 0 ? 'Remaining: ' : 'Over by: '}
                         </span>
                         <span className={`font-medium ${remaining < 0 ? 'text-destructive' : 'text-success'}`}>
-                          Ksh. {Math.abs(remaining).toLocaleString()}
+                          {remaining < 0 
+                          ? `-Ksh. ${Math.abs(remaining).toLocaleString()}`
+                          : `Ksh. ${remaining.toLocaleString()}`
                         </span>
                       </div>
                     </div>
