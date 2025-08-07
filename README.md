@@ -1,73 +1,185 @@
-# Welcome to your Lovable project
+# SmartSpend - Personal Finance Tracker
 
-## Project info
+A comprehensive personal finance management application built with React, TypeScript, and Supabase. Track expenses, manage budgets, set savings goals, and gain insights into your financial habits.
 
-**URL**: https://lovable.dev/projects/e5458f28-a63f-4085-9b73-487964bf1e9e
+## 🚀 Features
 
-## How can I edit this code?
+### 💰 Financial Management
+- **Transaction Tracking**: Record income and expenses with categories and dates
+- **Budget Management**: Set monthly budgets and track spending by category
+- **Savings Goals**: Create and monitor progress towards financial goals
+- **Smart Notifications**: Automatic alerts for budget limits and goal milestones
 
-There are several ways of editing your application.
+### 📊 Data & Analytics
+- **Financial Dashboard**: Visual overview of your financial health
+- **Spending Charts**: Interactive charts showing spending patterns
+- **Trends Analysis**: Track financial trends over time
+- **Category Insights**: Detailed breakdown of spending by category
 
-**Use Lovable**
+### 🔄 Import/Export
+- **CSV Import**: Import transactions and budgets from CSV files
+- **Data Export**: Export all financial data to CSV format
+- **Flexible Formats**: Support for various CSV structures
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/e5458f28-a63f-4085-9b73-487964bf1e9e) and start prompting.
+### 📱 Mobile Ready
+- **Responsive Design**: Optimized for mobile and tablet devices
+- **Android App**: Built with Capacitor for native Android deployment
+- **Push Notifications**: Real-time alerts for important financial events
 
-Changes made via Lovable will be committed automatically to this repo.
+### 🔐 Security & Authentication
+- **User Authentication**: Secure signup/login with Supabase Auth
+- **Data Privacy**: Row-level security ensures users only see their own data
+- **Profile Management**: Customizable user profiles and preferences
 
-**Use your preferred IDE**
+## 🛠️ Technology Stack
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Frontend**: React 18, TypeScript, Vite
+- **UI Framework**: Tailwind CSS, shadcn-ui components
+- **Backend**: Supabase (Database, Auth, Real-time)
+- **State Management**: Zustand with persistence
+- **Mobile**: Capacitor for native Android/iOS apps
+- **Charts**: Recharts for data visualization
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 📦 Installation & Setup
 
-Follow these steps:
+### Web Development
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```bash
+# Clone the repository
 git clone <YOUR_GIT_URL>
+cd smartspend
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Install dependencies
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Android Development
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+# Install dependencies
+npm install
 
-**Use GitHub Codespaces**
+# Add Android platform
+npx cap add android
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Build the web app
+npm run build
 
-## What technologies are used for this project?
+# Sync to Android
+npx cap sync android
 
-This project is built with:
+# Open in Android Studio
+npx cap open android
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+**Prerequisites for Android:**
+- Android Studio installed
+- Android SDK configured
+- Java Development Kit (JDK) installed
 
-## How can I deploy this project?
+### Database Setup
 
-Simply open [Lovable](https://lovable.dev/projects/e5458f28-a63f-4085-9b73-487964bf1e9e) and click on Share -> Publish.
+The app uses Supabase for backend services. The database includes:
 
-## Can I connect a custom domain to my Lovable project?
+- **Users & Profiles**: User authentication and profile management
+- **Transactions**: Financial transaction records
+- **Budget Items**: Monthly budget allocations by category
+- **Savings Goals**: Financial goals with progress tracking
+- **Notifications**: System-generated alerts and messages
 
-Yes, you can!
+## 🚀 Deployment
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Web Deployment
+Deploy directly from Lovable by clicking Share → Publish, or deploy to your preferred hosting platform.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Android Deployment
+Build the APK/AAB in Android Studio for distribution via Google Play Store or direct installation.
+
+## 🔧 Development Workflow
+
+### Making Changes
+1. **Via Lovable**: Visit the [Lovable Project](https://lovable.dev/projects/e5458f28-a63f-4085-9b73-487964bf1e9e) and use AI assistance
+2. **Local Development**: Clone repo, make changes, and push to sync with Lovable
+3. **Mobile Updates**: After changes, run `npm run build && npx cap sync android`
+
+### Key Commands
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npx cap sync         # Sync changes to mobile platforms
+npx cap run android  # Run on Android device/emulator
+```
+
+## 📊 Features Overview
+
+### Dashboard
+- Financial overview with income, expenses, and balance
+- Quick action buttons for common tasks
+- Recent transactions and spending insights
+- Budget alerts and goal progress
+
+### Expense Tracking
+- Add/edit/delete transactions
+- Categorize expenses and income
+- Date-based filtering and search
+- Bulk operations and CSV import
+
+### Budget Management
+- Set monthly budgets by category
+- Real-time spending tracking
+- Visual progress indicators
+- Automatic overspending alerts
+
+### Savings Goals
+- Create multiple savings goals
+- Track progress with visual indicators
+- Set target amounts and deadlines
+- Achievement notifications
+
+### Profile & Settings
+- User profile management
+- Notification preferences
+- Data export/import options
+- Account security settings
+
+## 🔐 Security Features
+
+- **Row-Level Security**: Database policies ensure data privacy
+- **JWT Authentication**: Secure token-based authentication
+- **Input Validation**: Client and server-side validation
+- **HTTPS Only**: Secure data transmission
+- **Regular Security Audits**: Automated security linting
+
+## 📱 Mobile Features
+
+- **Native Performance**: Capacitor provides native app experience
+- **Offline Support**: Core features work without internet
+- **Push Notifications**: Real-time alerts for financial events
+- **Touch Optimized**: Mobile-first UI design
+- **App Store Ready**: Build process for distribution
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is built with Lovable and follows standard web development practices.
+
+## 🆘 Support
+
+- **Documentation**: [Lovable Docs](https://docs.lovable.dev/)
+- **Community**: [Lovable Discord](https://discord.com/channels/1119885301872070706/1280461670979993613)
+- **Project URL**: https://lovable.dev/projects/e5458f28-a63f-4085-9b73-487964bf1e9e
+
+---
+
+**Built with ❤️ using Lovable - The AI-powered web development platform**
