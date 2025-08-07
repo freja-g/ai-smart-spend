@@ -1,4 +1,4 @@
-import { Bell, Settings,FileUp,FileDown } from "lucide-react"
+import { Bell, Settings, FileUp, FileDown, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useState, useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useAuth } from "@/hooks/use-auth"
-import { importTransactionsFromCSV, importBudgetFromFile } from "@/store/financial-store"
+import { importTransactionsFromCSV, importBudgetFromFile, useFinancialStore } from "@/store/financial-store"
 
 interface AppHeaderProps {
   title: string
@@ -23,6 +23,8 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showExport, setShowExport] = useState(false)
+  const { transactions, budgets, goals } = useFinancialStore()
 
   useEffect(() => {
     if (user) {
@@ -83,22 +85,101 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
     reader.onload = (e) => {
       const content = e.target?.result as string
       
-      if (type === 'transactions') {
-        importTransactionsFromCSV(content)
+      try {
+        if (type === 'transactions') {
+          const lines = content.split('\n')
+          const headers = lines[0].split(',').map(h => h.trim())
+          
+          for (let i = 1; i < lines.length; i++) {
+            if (lines[i].trim()) {
+              const values = lines[i].split(',').map(v => v.trim())
+              const transaction = {
+                description: values[headers.indexOf('description')] || values[0] || 'Imported Transaction',
+                amount: parseFloat(values[headers.indexOf('amount')] || values[1] || '0'),
+                category: values[headers.indexOf('category')] || values[2] || 'General',
+                date: new Date(values[headers.indexOf('date')] || values[3] || new Date()),
+                type: (values[headers.indexOf('type')] || values[4] || 'expense') as 'income' | 'expense'
+              }
+              useFinancialStore.getState().addTransaction(transaction)
+            }
+          }
+          
+          toast({
+            title: "Import Successful",
+            description: `Imported ${lines.length - 1} transactions.`
+          })
+        } else {
+          const lines = content.split('\n')
+          const headers = lines[0].split(',').map(h => h.trim())
+          
+          for (let i = 1; i < lines.length; i++) {
+            if (lines[i].trim()) {
+              const values = lines[i].split(',').map(v => v.trim())
+              const budget = {
+                category: values[headers.indexOf('category')] || values[0] || 'General',
+                budgeted: parseFloat(values[headers.indexOf('budgeted')] || values[1] || '0'),
+                spent: parseFloat(values[headers.indexOf('spent')] || values[2] || '0'),
+                month: values[headers.indexOf('month')] || values[3] || new Date().toISOString().slice(0, 7)
+              }
+              useFinancialStore.getState().addBudget(budget)
+            }
+          }
+          
+          toast({
+            title: "Import Successful", 
+            description: `Imported ${lines.length - 1} budget items.`
+          })
+        }
+      } catch (error) {
         toast({
-          title: "Import Started",
-          description: "Transactions import functionality will be implemented soon."
-        })
-      } else {
-        importBudgetFromFile(content)
-        toast({
-          title: "Import Started", 
-          description: "Budget import functionality will be implemented soon."
+          title: "Import Error",
+          description: "Failed to parse the file. Please check the format.",
+          variant: "destructive"
         })
       }
     }
     reader.readAsText(file)
     setShowImport(false)
+  }
+
+  const handleExport = (type: 'transactions' | 'budget' | 'goals') => {
+    let csvContent = ''
+    let filename = ''
+    
+    if (type === 'transactions') {
+      csvContent = 'description,amount,category,date,type\n'
+      transactions.forEach(t => {
+        csvContent += `"${t.description}",${t.amount},"${t.category}","${t.date.toISOString().split('T')[0]}","${t.type}"\n`
+      })
+      filename = 'transactions.csv'
+    } else if (type === 'budget') {
+      csvContent = 'category,budgeted,spent,month\n'
+      budgets.forEach(b => {
+        csvContent += `"${b.category}",${b.budgeted},${b.spent},"${b.month}"\n`
+      })
+      filename = 'budget.csv'
+    } else if (type === 'goals') {
+      csvContent = 'name,targetAmount,currentAmount,deadline,description\n'
+      goals.forEach(g => {
+        csvContent += `"${g.name}",${g.targetAmount},${g.currentAmount},"${g.deadline.toISOString().split('T')[0]}","${g.description || ''}"\n`
+      })
+      filename = 'goals.csv'
+    }
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    window.URL.revokeObjectURL(url)
+    
+    toast({
+      title: "Export Successful",
+      description: `${filename} has been downloaded.`
+    })
+    
+    setShowExport(false)
   }
 
   return (
@@ -110,6 +191,51 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
         )}
       </div>
       <div className="flex items-center space-x-2">
+        <Dialog open={showExport} onOpenChange={setShowExport}>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="icon" title="Export Data">
+              <Download className="h-5 w-5" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Export Financial Data</DialogTitle>
+              <DialogDescription>
+                Download your financial data as CSV files
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => handleExport('transactions')}
+                disabled={transactions.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export Transactions ({transactions.length} items)
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => handleExport('budget')}
+                disabled={budgets.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export Budget ({budgets.length} items)
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => handleExport('goals')}
+                disabled={goals.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export Goals ({goals.length} items)
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={showImport} onOpenChange={setShowImport}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="icon" title="Import Data">
@@ -231,7 +357,33 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
           </DialogContent>
         </Dialog>
 
-      
+        <Dialog open={showSettings} onOpenChange={setShowSettings}>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Settings className="h-5 w-5" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Quick Settings</DialogTitle>
+              <DialogDescription>
+                Access your account settings
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Go to the Profile tab for detailed settings and preferences.
+              </p>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setShowSettings(false)}
+              >
+                Go to Profile Settings
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
