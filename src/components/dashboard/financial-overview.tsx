@@ -16,10 +16,14 @@ export function FinancialOverview() {
 
   // Calculate monthly budget remaining (simplified)
   const monthlyBudget = budget.reduce((sum, item) => sum + item.amount, 0)
+
+  const budgetedCategories = budget.map(item => item.category)
+
   const budgetedSpending = expenses
-  .filter(exp => budget.some(b => b.category === exp.category))
-  .reduce((sum, exp) => sum + exp.amount, 0)
-const budgetRemaining = monthlyBudget - budgetedSpending
+    .filter(exp => budgetedCategories.includes(exp.category))
+    .reduce((sum, exp) => sum + exp.amount, 0)
+
+  const budgetRemaining = monthlyBudget - budgetedSpending
 
 
   return (
