@@ -1,4 +1,4 @@
-import { Bell, Settings, FileUp, FileDown, Download } from "lucide-react"
+import { Bell, Settings, FileUp, FileDown, Download, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -18,12 +18,14 @@ interface AppHeaderProps {
 export function AppHeader({ title, subtitle }: AppHeaderProps) {
   const { toast } = useToast()
   const { user } = useAuth()
+  const { syncData, isLoading } = useFinancialStore()
   const [notifications, setNotifications] = useState<any[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showExport, setShowExport] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
   const { transactions, budgets, goals } = useFinancialStore()
 
   useEffect(() => {
@@ -182,6 +184,24 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
     setShowExport(false)
   }
 
+  const handleSync = async () => {
+    setIsSyncing(true)
+    try {
+      await syncData()
+      toast({
+        title: "Data synced",
+        description: "Your financial data has been synchronized."
+      })
+    } catch (error) {
+      toast({
+        title: "Sync failed",
+        description: "Failed to sync data. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSyncing(false)
+    }
+  }
   return (
     <div className="flex items-center justify-between p-4 bg-card border-b border-border">
       <div>
@@ -191,6 +211,16 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
         )}
       </div>
       <div className="flex items-center space-x-2">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          title="Sync Data"
+          onClick={handleSync}
+          disabled={isSyncing || isLoading}
+        >
+          <RefreshCw className={`h-5 w-5 ${isSyncing ? 'animate-spin' : ''}`} />
+        </Button>
+        
         <Dialog open={showExport} onOpenChange={setShowExport}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="icon" title="Export Data">

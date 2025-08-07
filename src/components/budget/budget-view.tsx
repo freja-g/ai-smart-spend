@@ -52,27 +52,41 @@ export function BudgetView() {
 
     const spent = spendingByCategory[formData.category] || 0
 
-    addBudget({
+    const budgetData = {
       category: formData.category,
       budgeted: parseFloat(formData.budgeted),
       spent,
       month: formData.month
-    })
+    }
 
-    toast({
-      title: "Budget created",
-      description: `Budget for ${formData.category} has been set to Ksh. ${parseFloat(formData.budgeted).toLocaleString()}.`
+    addBudget(budgetData).then(() => {
+      toast({
+        title: "Budget created",
+        description: `Budget for ${formData.category} has been set to Ksh. ${parseFloat(formData.budgeted).toLocaleString()}.`
+      })
+      setFormData({ category: "", budgeted: "", month: formData.month })
+      setIsAdding(false)
+    }).catch((error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create budget. Please try again.",
+        variant: "destructive"
+      })
     })
-
-    setFormData({ category: "", budgeted: "", month: formData.month })
-    setIsAdding(false)
   }
 
   const handleDelete = (id: string, category: string) => {
-    deleteBudget(id)
-    toast({
-      title: "Budget deleted",
-      description: `Budget for ${category} has been removed.`
+    deleteBudget(id).then(() => {
+      toast({
+        title: "Budget deleted",
+        description: `Budget for ${category} has been removed.`
+      })
+    }).catch((error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete budget. Please try again.",
+        variant: "destructive"
+      })
     })
   }
 

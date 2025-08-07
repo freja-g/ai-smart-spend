@@ -33,21 +33,28 @@ export function GoalsView() {
       return
     }
 
-    addGoal({
+    const goalData = {
       name: formData.name,
       targetAmount: parseFloat(formData.targetAmount),
       currentAmount: 0,
       deadline: new Date(formData.deadline),
       description: formData.description
-    })
+    }
 
-    toast({
-      title: "Goal created",
-      description: `Your goal "${formData.name}" has been added.`
+    addGoal(goalData).then(() => {
+      toast({
+        title: "Goal created",
+        description: `Your goal "${formData.name}" has been added.`
+      })
+      setFormData({ name: "", targetAmount: "", deadline: "", description: "" })
+      setIsAdding(false)
+    }).catch((error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create goal. Please try again.",
+        variant: "destructive"
+      })
     })
-
-    setFormData({ name: "", targetAmount: "", deadline: "", description: "" })
-    setIsAdding(false)
   }
 
   const handleAddMoney = (goalId: string, amount: number) => {
@@ -55,19 +62,32 @@ export function GoalsView() {
     if (!goal) return
 
     const newAmount = Math.min(goal.currentAmount + amount, goal.targetAmount)
-    updateGoal(goalId, { currentAmount: newAmount })
-
-    toast({
-      title: "Progress updated",
-      description: `Added Ksh. ${amount.toLocaleString()} to ${goal.name}`
+    updateGoal(goalId, { currentAmount: newAmount }).then(() => {
+      toast({
+        title: "Progress updated",
+        description: `Added Ksh. ${amount.toLocaleString()} to ${goal.name}`
+      })
+    }).catch((error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update goal progress. Please try again.",
+        variant: "destructive"
+      })
     })
   }
 
   const handleDelete = (id: string, name: string) => {
-    deleteGoal(id)
-    toast({
-      title: "Goal deleted",
-      description: `${name} has been removed.`
+    deleteGoal(id).then(() => {
+      toast({
+        title: "Goal deleted",
+        description: `${name} has been removed.`
+      })
+    }).catch((error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete goal. Please try again.",
+        variant: "destructive"
+      })
     })
   }
 
