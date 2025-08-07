@@ -19,8 +19,6 @@ export function FinancialOverview() {
   const budgetedSpending = expenses
   .filter(exp => budget.some(b => b.category === exp.category))
   .reduce((sum, exp) => sum + exp.amount, 0)
-
-const monthlyBudget = budget.reduce((sum, b) => sum + b.amount, 0)
 const budgetRemaining = monthlyBudget - budgetedSpending
 
 
