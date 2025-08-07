@@ -217,7 +217,9 @@ export function BudgetView() {
         ) : (
           <div className="space-y-4">
             {budgets.map((budget) => {
-              const progress = (budget.spent / budget.budgeted) * 100
+              const progress = budget.budgeted > 0 
+                ? (budget.spent / budget.budgeted) * 100 
+                : 0
               const isOverBudget = budget.spent > budget.budgeted
               const remaining = budget.budgeted - budget.spent
 
