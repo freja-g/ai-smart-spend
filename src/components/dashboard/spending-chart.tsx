@@ -7,8 +7,32 @@ interface SpendingChartProps {
 }
 
 export function SpendingChart({ variant = 'pie' }: SpendingChartProps) {
-  const { getSpendingByCategory, monthlyRecords } = useFinancialStore()
-  
+  const { getSpendingByCategory} = useFinancialStore()
+  // ⚡ Dynamically calculate monthly income & expenses
+const allTransactions = getSpendingByCategory(true)?._rawData || [] // depends on how it's structured
+
+const monthlyTotals: Record<string, { income: number; expenses: number }> = {}
+
+allTransactions.forEach((tx: any) => {
+  const month = new Date(tx.date).toLocaleString('default', { month: 'short' }) // e.g., "Aug"
+  if (!monthlyTotals[month]) {
+    monthlyTotals[month] = { income: 0, expenses: 0 }
+  }
+
+  if (tx.type === 'income') {
+    monthlyTotals[month].income += tx.amount
+  } else if (tx.type === 'expense') {
+    monthlyTotals[month].expenses += tx.amount
+  }
+})
+
+// Convert to array
+const monthlyData = Object.entries(monthlyTotals).map(([month, values]) => ({
+  month,
+  income: values.income,
+  expenses: values.expenses,
+}))
+
   // Convert spending data to chart format
   const spendingByCategory = getSpendingByCategory()
   const spendingData = Object.entries(spendingByCategory).map(([category, amount], index) => {
@@ -32,7 +56,7 @@ export function SpendingChart({ variant = 'pie' }: SpendingChartProps) {
         description="Monthly comparison over time"
       >
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={monthlyRecords}>
+          <BarChart data={monthlyData}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
             <YAxis stroke="hsl(var(--muted-foreground))" />
