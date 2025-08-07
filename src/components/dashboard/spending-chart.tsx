@@ -10,7 +10,7 @@ export function SpendingChart({ variant = 'pie' }: SpendingChartProps) {
   const { getSpendingByCategory} = useFinancialStore()
   // ⚡ Dynamically calculate monthly income & expenses
 const allTransactions = getSpendingByCategory(true)?._rawData || [] // depends on how it's structured
-
+console.log("Raw transactions:", allTransactions)
 const monthlyTotals: Record<string, { income: number; expenses: number }> = {}
 
 allTransactions.forEach((tx: any) => {
@@ -32,7 +32,7 @@ const monthlyData = Object.entries(monthlyTotals).map(([month, values]) => ({
   income: values.income,
   expenses: values.expenses,
 }))
-
+console.log("Monthly data:", monthlyData)
   // Convert spending data to chart format
   const spendingByCategory = getSpendingByCategory()
   const spendingData = Object.entries(spendingByCategory).map(([category, amount], index) => {
