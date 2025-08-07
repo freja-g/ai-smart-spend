@@ -3,7 +3,7 @@ import { FinancialCard } from "@/components/ui/financial-card"
 import { useFinancialStore } from "@/store/financial-store"
 
 export function FinancialOverview() {
-  const { getTotalIncome, getTotalExpenses, getBalance, goals, budget, expenses } = useFinancialStore()
+  const { getTotalIncome, getTotalExpenses, getBalance, goals } = useFinancialStore()
   
   const totalIncome = getTotalIncome()
   const totalExpenses = getTotalExpenses()
@@ -15,16 +15,8 @@ export function FinancialOverview() {
   }, 0) / goals.length * 100
 
   // Calculate monthly budget remaining (simplified)
-  const monthlyBudget = budget.reduce((sum, item) => sum + item.amount, 0)
-
-  const budgetedCategories = budget.map(item => item.category)
-
-  const budgetedSpending = expenses
-    .filter(exp => budgetedCategories.includes(exp.category))
-    .reduce((sum, exp) => sum + exp.amount, 0)
-
-  const budgetRemaining = monthlyBudget - budgetedSpending
-
+  const monthlyBudget = 3500 // This could be dynamic
+  const budgetRemaining = monthlyBudget - totalExpenses
 
   return (
     <div className="grid grid-cols-2 gap-4 p-4">
