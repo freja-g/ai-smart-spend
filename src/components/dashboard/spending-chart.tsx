@@ -9,7 +9,7 @@ interface SpendingChartProps {
 export function SpendingChart({ variant = 'pie' }: SpendingChartProps) {
   const { getSpendingByCategory} = useFinancialStore()
   // ⚡ Dynamically calculate monthly income & expenses
-const allTransactions = getSpendingByCategory(true)?._rawData || [] // depends on how it's structured
+const allTransactions = useFinancialStore.getState().transactions || [] // depends on how it's structured
 console.log("Raw transactions:", allTransactions)
 const monthlyTotals: Record<string, { income: number; expenses: number }> = {}
 
@@ -49,6 +49,7 @@ console.log("Monthly data:", monthlyData)
       color: colors[index % colors.length]
     }
   })
+  console.log("📊 Final monthlyData", monthlyData)
   if (variant === 'bar') {
     return (
       <ChartContainer 
