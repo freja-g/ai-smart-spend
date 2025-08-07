@@ -45,12 +45,12 @@ export function FinancialOverview() {
         variant="savings"
       />
       <FinancialCard
-         title={budgetRemaining >= 0 ? "Budget Remaining" : "Over Budget"}
-  value={`Ksh. ${Math.abs(budgetRemaining).toLocaleString()}`}
-  trend={budgetRemaining >= 0 ? "up" : "down"}
-  trendValue={`${Math.abs((budgetRemaining / monthlyBudget) * 100).toFixed(0)}% ${budgetRemaining >= 0 ? "left" : "over"}`}
-  icon={<TrendingUp className="h-4 w-4" />}
-  variant="default"
+        title="Budget Remaining"
+        value={`Ksh. ${budgetRemaining.toLocaleString()}`}
+        trend={budgetRemaining > 0 ? "up" : "down"}
+        trendValue={`${((budgetRemaining / monthlyBudget) * 100).toFixed(0)}% left`}
+        icon={<TrendingUp className="h-4 w-4" />}
+        variant="default"
       />
     </div>
   )
