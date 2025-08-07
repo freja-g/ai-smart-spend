@@ -83,7 +83,7 @@ export function BudgetView() {
   // Update spent amounts based on actual transactions
   React.useEffect(() => {
     budgets.forEach(budget => {
-      const actualSpent = spendingByCategory[budget.category] || 0
+      const actualSpent = Math.abs(spendingByCategory[budget.category] || 0)
       if (actualSpent !== budget.spent) {
         updateBudget(budget.id, { spent: actualSpent })
       }
