@@ -2,21 +2,12 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import { ChartContainer } from '@/components/ui/chart-container'
 import { useFinancialStore } from '@/store/financial-store'
 
-const monthlyData = [
-  { month: 'Jan', income: 400000, expenses: 240000 },
-  { month: 'Feb', income: 420000, expenses: 280000 },
-  { month: 'Mar', income: 410000, expenses: 260000 },
-  { month: 'Apr', income: 430000, expenses: 290000 },
-  { month: 'May', income: 415000, expenses: 265000 },
-  { month: 'Jun', income: 440000, expenses: 310000 },
-]
-
 interface SpendingChartProps {
   variant?: 'pie' | 'bar'
 }
 
 export function SpendingChart({ variant = 'pie' }: SpendingChartProps) {
-  const { getSpendingByCategory } = useFinancialStore()
+  const { getSpendingByCategory, monthlyRecords } = useFinancialStore()
   
   // Convert spending data to chart format
   const spendingByCategory = getSpendingByCategory()
@@ -41,7 +32,7 @@ export function SpendingChart({ variant = 'pie' }: SpendingChartProps) {
         description="Monthly comparison over time"
       >
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={monthlyData}>
+          <BarChart data={monthlyRecords}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
             <YAxis stroke="hsl(var(--muted-foreground))" />
