@@ -26,7 +26,7 @@ export function BudgetView() {
 
   const spendingByCategory = getSpendingByCategory()
   const budgetStatus = getBudgetStatus()
-    const remaining = budget.budgeted - budget.spent;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -83,7 +83,7 @@ export function BudgetView() {
   // Update spent amounts based on actual transactions
   React.useEffect(() => {
     budgets.forEach(budget => {
-      const actualSpent = Math.abs(spendingByCategory[budget.category] || 0)
+      const actualSpent = spendingByCategory[budget.category] || 0
       if (actualSpent !== budget.spent) {
         updateBudget(budget.id, { spent: actualSpent })
       }
@@ -217,9 +217,7 @@ export function BudgetView() {
         ) : (
           <div className="space-y-4">
             {budgets.map((budget) => {
-              const progress = budget.budgeted > 0 
-                ? (budget.spent / budget.budgeted) * 100 
-                : 0
+              const progress = (budget.spent / budget.budgeted) * 100
               const isOverBudget = budget.spent > budget.budgeted
               const remaining = budget.budgeted - budget.spent
 
