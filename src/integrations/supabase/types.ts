@@ -204,7 +204,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_budget_alert_notification: {
+        Args: {
+          p_user_id: string
+          p_category: string
+          p_spent_amount: number
+          p_budget_amount: number
+        }
+        Returns: undefined
+      }
+      create_savings_goal_notification: {
+        Args: {
+          p_user_id: string
+          p_goal_name: string
+          p_current_amount: number
+          p_target_amount: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

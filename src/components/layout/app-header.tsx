@@ -357,33 +357,6 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={showSettings} onOpenChange={setShowSettings}>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Settings className="h-5 w-5" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Quick Settings</DialogTitle>
-              <DialogDescription>
-                Access your account settings
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Go to the Profile tab for detailed settings and preferences.
-              </p>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => setShowSettings(false)}
-              >
-                Go to Profile Settings
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   )
