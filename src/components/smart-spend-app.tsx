@@ -66,6 +66,7 @@ export function SmartSpendApp() {
       <AppHeader 
         title={getHeaderTitle()} 
         subtitle={getHeaderSubtitle()}
+        onNavigateToProfile={() => setActiveTab("profile")}
       />
       
       <main className="flex-1 overflow-hidden">

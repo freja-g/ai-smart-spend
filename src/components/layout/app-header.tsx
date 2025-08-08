@@ -13,9 +13,10 @@ import { importTransactionsFromCSV, importBudgetFromFile, useFinancialStore } fr
 interface AppHeaderProps {
   title: string
   subtitle?: string
+  onNavigateToProfile?: () => void
 }
 
-export function AppHeader({ title, subtitle }: AppHeaderProps) {
+export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderProps) {
   const { toast } = useToast()
   const { user } = useAuth()
   const [notifications, setNotifications] = useState<any[]>([])
@@ -344,12 +345,15 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
             </DialogHeader>
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Go to the Profile tab for detailed settings and preferences.
+                Access your account settings and preferences.
               </p>
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => setShowSettings(false)}
+                onClick={() => {
+                  setShowSettings(false)
+                  onNavigateToProfile?.()
+                }}
               >
                 Go to Profile Settings
               </Button>
