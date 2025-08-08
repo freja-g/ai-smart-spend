@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SmartSpend</string>
+    <string name="title_activity_main">SmartSpend</string>
+    <string name="package_name">app.lovable.e5458f28a63f40859b73487964bf1e9e</string>
+    <string name="custom_url_scheme">app.lovable.e5458f28a63f40859b73487964bf1e9e</string>
+</resources>

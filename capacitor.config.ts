@@ -8,6 +8,23 @@ const config: CapacitorConfig = {
     url: 'https://e5458f28-a63f-4085-9b73-487964bf1e9e.lovableproject.com?forceHideBadge=true',
     cleartext: true
   },
+  plugins: {
+    LocalNotifications: {
+      smallIcon: "ic_stat_icon_config_sample",
+      iconColor: "#488AFF",
+      sound: "beep.wav",
+    },
+  },
+  android: {
+    buildOptions: {
+      keystorePath: undefined,
+      keystorePassword: undefined,
+      keystoreAlias: undefined,
+      keystoreAliasPassword: undefined,
+      releaseType: "APK",
+      signingType: "apksigner"
+    }
+  }
 };
 
 export default config;

@@ -1,0 +1,9 @@
+include ':app'
+include ':capacitor-cordova-android-plugins'
+project(':capacitor-cordova-android-plugins').projectDir = file('../node_modules/@capacitor/cordova-android-plugins/android-plugins')
+
+include ':capacitor-android'
+project(':capacitor-android').projectDir = file('../node_modules/@capacitor/android/capacitor')
+
+include ':capacitor-local-notifications'
+project(':capacitor-local-notifications').projectDir = file('../node_modules/@capacitor/local-notifications/android')

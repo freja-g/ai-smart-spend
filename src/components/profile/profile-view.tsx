@@ -29,7 +29,7 @@ interface UserProfile {
   email: string
   phone: string
   notifications_enabled: boolean
-  push_notifications_enabled: boolean
+  local_notifications_enabled: boolean
 }
 
 export function ProfileView() {
@@ -41,7 +41,7 @@ export function ProfileView() {
     email: "",
     phone: "",
     notifications_enabled: true,
-    push_notifications_enabled: true
+    local_notifications_enabled: true
   })
 
   const [notifications, setNotifications] = useState<any[]>([])
@@ -76,7 +76,7 @@ export function ProfileView() {
           email: data.email || user.email || "",
           phone: data.phone || "",
           notifications_enabled: data.notifications_enabled ?? true,
-          push_notifications_enabled: data.push_notifications_enabled ?? true
+          local_notifications_enabled: data.push_notifications_enabled ?? true
         })
       }
     } catch (error) {
@@ -117,7 +117,7 @@ export function ProfileView() {
           display_name: profile.display_name,
           phone: profile.phone,
           notifications_enabled: profile.notifications_enabled,
-          push_notifications_enabled: profile.push_notifications_enabled
+          push_notifications_enabled: profile.local_notifications_enabled
         })
         .eq('user_id', user.id)
 
@@ -286,12 +286,12 @@ export function ProfileView() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium">Push Notifications</p>
-                        <p className="text-sm text-muted-foreground">Receive push notifications on mobile</p>
+                        <p className="font-medium">Local Notifications</p>
+                        <p className="text-sm text-muted-foreground">Receive local notifications on device</p>
                       </div>
                       <Switch
-                        checked={profile.push_notifications_enabled}
-                        onCheckedChange={(checked) => setProfile(prev => ({ ...prev, push_notifications_enabled: checked }))}
+                        checked={profile.local_notifications_enabled}
+                        onCheckedChange={(checked) => setProfile(prev => ({ ...prev, local_notifications_enabled: checked }))}
                       />
                     </div>
                   </div>
