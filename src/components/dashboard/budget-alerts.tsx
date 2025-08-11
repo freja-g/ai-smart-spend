@@ -94,7 +94,7 @@ export function BudgetAlerts() {
                   </Badge>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  ${budget.spent.toFixed(2)} / ${budget.budgeted.toFixed(2)}
+                  Ksh. {budget.spent.toFixed(2)} / Ksh. {budget.budgeted.toFixed(2)}
                 </div>
               </div>
               <Progress 
