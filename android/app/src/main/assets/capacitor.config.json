@@ -1,0 +1,13 @@
+{
+	"appId": "app.lovable.e5458f28a63f40859b73487964bf1e9e",
+	"appName": "SmartSpend",
+	"webDir": "dist",
+	"plugins": {
+		"LocalNotifications": {
+			"smallIcon": "ic_stat_icon_config_sample",
+			"iconColor": "#488AFF",
+			"sound": "beep.wav"
+		}
+	},
+	"android": {}
+}
