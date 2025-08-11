@@ -1,0 +1,30 @@
+import { CapacitorConfig } from '@capacitor/cli';
+
+const config: CapacitorConfig = {
+  appId: 'app.lovable.e5458f28a63f40859b73487964bf1e9e',
+  appName: 'SmartSpend (Dev)',
+  webDir: 'dist',
+  server: {
+    url: 'http://localhost:8080',
+    cleartext: true
+  },
+  plugins: {
+    LocalNotifications: {
+      smallIcon: "ic_stat_icon_config_sample",
+      iconColor: "#488AFF",
+      sound: "beep.wav",
+    },
+  },
+  android: {
+    buildOptions: {
+      keystorePath: undefined,
+      keystorePassword: undefined,
+      keystoreAlias: undefined,
+      keystoreAliasPassword: undefined,
+      releaseType: "APK",
+      signingType: "apksigner"
+    }
+  }
+};
+
+export default config;
