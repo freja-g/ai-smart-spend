@@ -445,7 +445,21 @@ export function ProfileView() {
                   <Bell className="h-5 w-5" />
                   Notifications
                 </h3>
-                {notifications.length === 0 ? (
+                {notificationsError ? (
+                  <div className="text-center py-8">
+                    <Bell className="h-12 w-12 mx-auto text-destructive mb-4" />
+                    <p className="text-sm font-medium text-destructive">Failed to load notifications</p>
+                    <p className="text-xs mt-1 text-muted-foreground">{notificationsError}</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3"
+                      onClick={fetchNotifications}
+                    >
+                      Try Again
+                    </Button>
+                  </div>
+                ) : notifications.length === 0 ? (
                   <div className="text-center py-8">
                     <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <p className="text-muted-foreground">No notifications yet</p>
