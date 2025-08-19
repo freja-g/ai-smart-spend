@@ -176,7 +176,11 @@ export function ProfileView() {
         )
       }
     } catch (error) {
-      console.error('Error marking notification as read:', error)
+      console.error('Error marking notification as read:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        notificationId,
+        error
+      })
     }
   }
 
