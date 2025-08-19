@@ -13,31 +13,54 @@ export const useLocalNotifications = () => {
       if (!user) return;
 
       try {
-        // Request permission for local notifications
-        const permissionStatus = await LocalNotifications.requestPermissions();
-        
-        if (permissionStatus.display === 'granted') {
-          console.log('Local notification permission granted');
-          
-          // Listen for local notification actions
-          LocalNotifications.addListener('localNotificationReceived', (notification) => {
-            console.log('Local notification received:', notification);
-            
-            toast({
-              title: notification.title || 'Notification',
-              description: notification.body || 'You have a new notification',
-            });
-          });
+        // Check if we're on a native platform
+        const isNative = Capacitor.isNativePlatform();
+        console.log('Platform is native:', isNative);
 
-          // Listen for local notification actions
-          LocalNotifications.addListener('localNotificationActionPerformed', (notification) => {
-            console.log('Local notification action performed:', notification);
-            
-            // Handle notification action (e.g., navigate to specific screen)
-            // You can implement navigation logic here
-          });
+        if (isNative) {
+          // Request permission for local notifications
+          const permissionStatus = await LocalNotifications.requestPermissions();
+          console.log('Permission status:', permissionStatus);
+
+          if (permissionStatus.display === 'granted') {
+            console.log('Local notification permission granted');
+
+            // Clear any existing listeners
+            await LocalNotifications.removeAllListeners();
+
+            // Listen for local notification actions (when user taps notification)
+            LocalNotifications.addListener('localNotificationReceived', (notification) => {
+              console.log('Local notification received:', notification);
+
+              // Only show toast on web or when app is in foreground
+              if (!isNative) {
+                toast({
+                  title: notification.title || 'Notification',
+                  description: notification.body || 'You have a new notification',
+                });
+              }
+            });
+
+            // Listen for local notification actions (when user taps notification)
+            LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
+              console.log('Local notification action performed:', notificationAction);
+
+              // Handle notification tap - you can add navigation logic here
+              toast({
+                title: "Notification Opened",
+                description: "You tapped on a notification",
+              });
+            });
+          } else {
+            console.log('Local notification permission not granted');
+            toast({
+              title: "Notifications Disabled",
+              description: "Please enable notifications in your device settings for alerts.",
+              variant: "destructive"
+            });
+          }
         } else {
-          console.log('Local notification permission not granted');
+          console.log('Running on web - notifications will work in browser');
         }
       } catch (error) {
         console.error('Error initializing local notifications:', error);
