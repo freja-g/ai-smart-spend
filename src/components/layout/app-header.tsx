@@ -395,16 +395,35 @@ export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderPro
               <p className="text-sm text-muted-foreground">
                 Access your account settings and preferences.
               </p>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => {
-                  setShowSettings(false)
-                  onNavigateToProfile?.()
-                }}
-              >
-                Go to Profile Settings
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setShowSettings(false)
+                    onNavigateToProfile?.()
+                  }}
+                >
+                  Go to Profile Settings
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => {
+                    scheduleNotification(
+                      "Test Notification",
+                      "Local notifications are working! 🎉"
+                    )
+                    toast({
+                      title: "Test notification sent",
+                      description: "Check your notification panel or home screen"
+                    })
+                  }}
+                >
+                  Test Notifications
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
