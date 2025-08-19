@@ -3,30 +3,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from 'recharts'
 import { useFinancialStore } from "@/store/financial-store"
 import { format, subMonths, startOfMonth } from "date-fns"
+import { useMemo } from "react"
 
 export function FinancialTrends() {
   const { transactions } = useFinancialStore()
 
-  // Generate last 6 months of data
-  const generateTrendData = () => {
+  // Memoize trend data calculation to prevent unnecessary re-renders
+  const trendData = useMemo(() => {
     const months = []
     for (let i = 5; i >= 0; i--) {
       const date = startOfMonth(subMonths(new Date(), i))
       const monthKey = format(date, 'yyyy-MM')
-      
+
       // Filter transactions for this month
-      const monthTransactions = transactions.filter(t => 
+      const monthTransactions = transactions.filter(t =>
         new Date(t.date).toISOString().startsWith(monthKey)
       )
-      
+
       const income = monthTransactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0)
-      
+
       const expenses = Math.abs(monthTransactions
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0))
-      
+
       const savings = income - expenses
 
       months.push({
@@ -38,9 +39,7 @@ export function FinancialTrends() {
       })
     }
     return months
-  }
-
-  const trendData = generateTrendData()
+  }, [transactions])
   
   // Calculate trend indicators
   const currentMonth = trendData[trendData.length - 1]

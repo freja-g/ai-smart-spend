@@ -32,7 +32,7 @@ const ChartContainer = React.forwardRef<HTMLDivElement, ChartContainerProps>(
             )}
           </div>
         )}
-        <div className="w-full h-64">
+        <div className="w-full min-h-64 h-64">
           {children}
         </div>
       </div>

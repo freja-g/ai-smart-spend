@@ -7,103 +7,87 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { 
-  User, 
-  Settings, 
-  Bell, 
-  Shield, 
- FileUp,
- FileDown,
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {
+  User,
+  Settings,
+  Bell,
+  Shield,
+  Download,
+  Upload,
   Trash2,
   Save,
   Loader2,
   LogOut
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
-import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
-import { clearFinancialData } from "@/store/financial-store"
+import { clearFinancialData, useFinancialStore, importTransactionsFromCSV, importBudgetFromFile } from "@/store/financial-store"
+import { useLocalNotifications } from "@/hooks/use-local-notifications"
 
 interface UserProfile {
   display_name: string
   email: string
   phone: string
-  notifications_enabled: boolean
   local_notifications_enabled: boolean
 }
 
 export function ProfileView() {
   const { user, signOut } = useAuth()
   const { toast } = useToast()
-  
+  const { cancelAllNotifications } = useLocalNotifications()
+
   const [profile, setProfile] = useState<UserProfile>({
     display_name: "",
     email: "",
     phone: "",
-    notifications_enabled: true,
     local_notifications_enabled: true
   })
 
-  const [notifications, setNotifications] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [activeSection, setActiveSection] = useState<string>("profile")
+  const [showImport, setShowImport] = useState(false)
+  const { transactions, budgets, goals } = useFinancialStore()
 
   useEffect(() => {
     if (user) {
-      fetchProfile()
-      fetchNotifications()
+      loadProfile()
     }
   }, [user])
 
-  const fetchProfile = async () => {
+  const loadProfile = () => {
     if (!user) return
 
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle()
+    // Load profile from localStorage or use defaults
+    const savedProfile = localStorage.getItem(`profile_${user.id}`)
 
-      if (error) {
-        console.error('Error fetching profile:', error)
-        return
-      }
-
-      if (data) {
+    if (savedProfile) {
+      try {
+        const parsedProfile = JSON.parse(savedProfile)
         setProfile({
-          display_name: data.display_name || "",
-          email: data.email || user.email || "",
-          phone: data.phone || "",
-          notifications_enabled: data.notifications_enabled ?? true,
-          local_notifications_enabled: data.push_notifications_enabled ?? true
+          display_name: parsedProfile.display_name || user.user_metadata?.display_name || "",
+          email: user.email || "",
+          phone: parsedProfile.phone || "",
+          local_notifications_enabled: parsedProfile.local_notifications_enabled ?? true
         })
+      } catch (error) {
+        console.error('Error loading profile from localStorage:', error)
+        setDefaultProfile()
       }
-    } catch (error) {
-      console.error('Error:', error)
+    } else {
+      setDefaultProfile()
     }
   }
 
-  const fetchNotifications = async () => {
+  const setDefaultProfile = () => {
     if (!user) return
 
-    try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10)
-
-      if (error) {
-        console.error('Error fetching notifications:', error)
-        return
-      }
-
-      setNotifications(data || [])
-    } catch (error) {
-      console.error('Error:', error)
-    }
+    setProfile({
+      display_name: user.user_metadata?.display_name || "",
+      email: user.email || "",
+      phone: "",
+      local_notifications_enabled: true
+    })
   }
 
   const handleProfileUpdate = async () => {
@@ -111,23 +95,12 @@ export function ProfileView() {
 
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          display_name: profile.display_name,
-          phone: profile.phone,
-          notifications_enabled: profile.notifications_enabled,
-          push_notifications_enabled: profile.local_notifications_enabled
-        })
-        .eq('user_id', user.id)
+      // Save profile to localStorage
+      localStorage.setItem(`profile_${user.id}`, JSON.stringify(profile))
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update profile. Please try again.",
-          variant: "destructive"
-        })
-        return
+      // Handle notification settings
+      if (!profile.local_notifications_enabled) {
+        await cancelAllNotifications()
       }
 
       toast({
@@ -145,27 +118,6 @@ export function ProfileView() {
     }
   }
 
-  const markNotificationAsRead = async (notificationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId)
-
-      if (!error) {
-        setNotifications(prev => 
-          prev.map(notif => 
-            notif.id === notificationId 
-              ? { ...notif, read: true }
-              : notif
-          )
-        )
-      }
-    } catch (error) {
-      console.error('Error marking notification as read:', error)
-    }
-  }
-
   const handleSignOut = async () => {
     await signOut()
     toast({
@@ -174,11 +126,90 @@ export function ProfileView() {
     })
   }
 
+  const handleExport = (type: 'transactions' | 'budget' | 'goals' | 'all') => {
+    let csvContent = ''
+    let filename = ''
+
+    if (type === 'all') {
+      csvContent = 'type,description,amount,category,date,budgeted,spent,month,targetAmount,currentAmount,deadline,goalName\n'
+
+      transactions.forEach(t => {
+        csvContent += `transaction,"${t.description}",${t.amount},"${t.category}","${t.date.toISOString().split('T')[0]}",,,,,,,\n`
+      })
+
+      budgets.forEach(b => {
+        csvContent += `budget,,,${b.category},,${b.budgeted},${b.spent},"${b.month}",,,,,\n`
+      })
+
+      goals.forEach(g => {
+        csvContent += `goal,,,,,,,,"${g.targetAmount}","${g.currentAmount}","${g.deadline.toISOString().split('T')[0]}","${g.name}"\n`
+      })
+
+      filename = 'smartspend-complete-data.csv'
+    } else if (type === 'transactions') {
+      csvContent = 'description,amount,category,date,type\n'
+      transactions.forEach(t => {
+        csvContent += `"${t.description}",${t.amount},"${t.category}","${t.date.toISOString().split('T')[0]}","${t.type}"\n`
+      })
+      filename = 'transactions.csv'
+    } else if (type === 'budget') {
+      csvContent = 'category,budgeted,spent,month\n'
+      budgets.forEach(b => {
+        csvContent += `"${b.category}",${b.budgeted},${b.spent},"${b.month}"\n`
+      })
+      filename = 'budget.csv'
+    } else if (type === 'goals') {
+      csvContent = 'name,targetAmount,currentAmount,deadline,description\n'
+      goals.forEach(g => {
+        csvContent += `"${g.name}",${g.targetAmount},${g.currentAmount},"${g.deadline.toISOString().split('T')[0]}","${g.description || ''}"\n`
+      })
+      filename = 'goals.csv'
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    window.URL.revokeObjectURL(url)
+
+    toast({
+      title: "Export Successful",
+      description: `${filename} has been downloaded.`
+    })
+  }
+
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>, type: 'transactions' | 'budget') => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const content = e.target?.result as string
+
+      let result
+      if (type === 'transactions') {
+        result = importTransactionsFromCSV(content)
+      } else {
+        result = importBudgetFromFile(content)
+      }
+
+      toast({
+        title: result.success ? "Import Successful" : "Import Failed",
+        description: result.message,
+        variant: result.success ? "default" : "destructive"
+      })
+    }
+    reader.readAsText(file)
+    setShowImport(false)
+  }
+
   const menuItems = [
     { id: "profile", label: "Profile Info", icon: User },
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "security", label: "Security", icon: Shield },
-    { id: "data", label: "Data & Privacy", icon:FileUp },
+    { id: "data", label: "Data & Privacy", icon: Download },
   ]
 
   return (
@@ -276,18 +307,8 @@ export function ProfileView() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium">Email Notifications</p>
-                        <p className="text-sm text-muted-foreground">Receive notifications via email</p>
-                      </div>
-                      <Switch
-                        checked={profile.notifications_enabled}
-                        onCheckedChange={(checked) => setProfile(prev => ({ ...prev, notifications_enabled: checked }))}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
                         <p className="font-medium">Local Notifications</p>
-                        <p className="text-sm text-muted-foreground">Receive local notifications on device</p>
+                        <p className="text-sm text-muted-foreground">Receive notifications on your device for budget alerts and goal progress</p>
                       </div>
                       <Switch
                         checked={profile.local_notifications_enabled}
@@ -308,37 +329,39 @@ export function ProfileView() {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   <Bell className="h-5 w-5" />
-                  Notifications
+                  Local Notifications
                 </h3>
-                {notifications.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No notifications yet</p>
+                <div className="p-4 border rounded-lg bg-muted/30">
+                  <h4 className="font-medium mb-2">Notification Settings</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    SmartSpend uses local notifications to alert you about:
+                  </p>
+                  <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                    <li>• Budget alerts when you reach 80% of your spending limit</li>
+                    <li>• Goal progress when you reach 75% of your savings target</li>
+                    <li>• Financial milestones and achievements</li>
+                  </ul>
+                  <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                    <p className="text-xs text-primary font-medium">
+                      📱 Android Users: Make sure notifications are enabled in your device settings for the best experience.
+                    </p>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {notifications.map((notification) => (
-                      <div 
-                        key={notification.id}
-                        className={`p-3 border rounded-lg ${notification.read ? 'bg-muted/50' : 'bg-background'}`}
-                        onClick={() => !notification.read && markNotificationAsRead(notification.id)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-medium">{notification.title}</h4>
-                            <p className="text-sm text-muted-foreground">{notification.message}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {new Date(notification.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                          {!notification.read && (
-                            <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2"></div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                </div>
+
+                <div className="p-4 border rounded-lg">
+                  <h4 className="font-medium mb-2">Current Status</h4>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Local Notifications</span>
+                    <Badge variant={profile.local_notifications_enabled ? "default" : "secondary"}>
+                      {profile.local_notifications_enabled ? "Enabled" : "Disabled"}
+                    </Badge>
                   </div>
-                )}
+                  {!profile.local_notifications_enabled && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Enable notifications in the Profile section to receive alerts.
+                    </p>
+                  )}
+                </div>
               </div>
             )}
 

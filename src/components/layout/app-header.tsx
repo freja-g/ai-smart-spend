@@ -1,4 +1,4 @@
-import { Bell, Settings, FileUp, FileDown, Download } from "lucide-react"
+import { Bell, Settings, Upload, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { useState, useEffect } from "react"
-import { supabase } from "@/integrations/supabase/client"
 import { useAuth } from "@/hooks/use-auth"
 import { importTransactionsFromCSV, importBudgetFromFile, useFinancialStore } from "@/store/financial-store"
+import { useLocalNotifications } from "@/hooks/use-local-notifications"
 
 interface AppHeaderProps {
   title: string
@@ -19,63 +19,110 @@ interface AppHeaderProps {
 export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderProps) {
   const { toast } = useToast()
   const { user } = useAuth()
-  const [notifications, setNotifications] = useState<any[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
+  const { scheduleNotification } = useLocalNotifications()
+  const [localNotifications, setLocalNotifications] = useState<Array<{
+    id: string
+    title: string
+    message: string
+    timestamp: Date
+    read: boolean
+  }>>([])
   const [showNotifications, setShowNotifications] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showExport, setShowExport] = useState(false)
   const { transactions, budgets, goals } = useFinancialStore()
 
+  // Generate local notifications based on financial data
   useEffect(() => {
-    if (user) {
-      fetchNotifications()
-    }
-  }, [user])
+    if (!user || !transactions.length) return
 
-  const fetchNotifications = async () => {
-    if (!user) return
+    const checkBudgetAlerts = () => {
+      const currentMonth = new Date().toISOString().slice(0, 7)
+      const monthlyExpenses = transactions
+        .filter(t => t.type === 'expense' && t.date.toISOString().startsWith(currentMonth))
+        .reduce((total, t) => total + Math.abs(t.amount), 0)
 
-    try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10)
+      const monthlyBudget = budgets.reduce((total, b) => total + b.budgeted, 0)
 
-      if (error) {
-        console.error('Error fetching notifications:', error)
-        return
+      if (monthlyBudget > 0 && monthlyExpenses > monthlyBudget * 0.8) {
+        const notification = {
+          id: `budget-alert-${Date.now()}`,
+          title: 'Budget Alert',
+          message: `You've spent 80% of your monthly budget`,
+          timestamp: new Date(),
+          read: false
+        }
+
+        setLocalNotifications(prev => {
+          // Don't add duplicate alerts
+          if (prev.some(n => n.title === 'Budget Alert' && !n.read)) return prev
+          return [notification, ...prev.slice(0, 9)]
+        })
+
+        scheduleNotification(notification.title, notification.message)
       }
+    }
 
-      setNotifications(data || [])
-      setUnreadCount(data?.filter(n => !n.read).length || 0)
-    } catch (error) {
-      console.error('Error:', error)
+    const checkGoalProgress = () => {
+      goals.forEach(goal => {
+        const progress = (goal.currentAmount / goal.targetAmount) * 100
+
+        if (progress >= 75 && progress < 100) {
+          const notification = {
+            id: `goal-progress-${goal.id}-${Date.now()}`,
+            title: 'Goal Progress',
+            message: `You're ${progress.toFixed(0)}% towards your ${goal.name} goal!`,
+            timestamp: new Date(),
+            read: false
+          }
+
+          setLocalNotifications(prev => {
+            // Don't add duplicate goal notifications
+            if (prev.some(n => n.message.includes(goal.name) && !n.read)) return prev
+            return [notification, ...prev.slice(0, 9)]
+          })
+
+          scheduleNotification(notification.title, notification.message)
+        }
+      })
+    }
+
+    checkBudgetAlerts()
+    checkGoalProgress()
+  }, [user, transactions, budgets, goals, scheduleNotification])
+
+  const addWelcomeNotification = () => {
+    if (localNotifications.length === 0) {
+      const welcomeNotification = {
+        id: `welcome-${Date.now()}`,
+        title: 'Welcome to SmartSpend!',
+        message: 'Start tracking your expenses and achieving your financial goals.',
+        timestamp: new Date(),
+        read: false
+      }
+      setLocalNotifications([welcomeNotification])
     }
   }
 
-  const markNotificationAsRead = async (notificationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId)
-
-      if (!error) {
-        setNotifications(prev => 
-          prev.map(notif => 
-            notif.id === notificationId 
-              ? { ...notif, read: true }
-              : notif
-          )
-        )
-        setUnreadCount(prev => Math.max(0, prev - 1))
-      }
-    } catch (error) {
-      console.error('Error marking notification as read:', error)
+  useEffect(() => {
+    if (user) {
+      addWelcomeNotification()
     }
+  }, [user])
+
+  const markNotificationAsRead = (notificationId: string) => {
+    setLocalNotifications(prev =>
+      prev.map(notif =>
+        notif.id === notificationId
+          ? { ...notif, read: true }
+          : notif
+      )
+    )
+  }
+
+  const getUnreadCount = () => {
+    return localNotifications.filter(n => !n.read).length
   }
 
   const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>, type: 'transactions' | 'budget') => {
@@ -240,7 +287,7 @@ export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderPro
         <Dialog open={showImport} onOpenChange={setShowImport}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="icon" title="Import Data">
-              <FileUp className="h-5 w-5" />
+              <Upload className="h-5 w-5" />
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -277,12 +324,12 @@ export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderPro
           <DialogTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <Badge 
-                  variant="destructive" 
+              {getUnreadCount() > 0 && (
+                <Badge
+                  variant="destructive"
                   className="absolute -top-1 -right-1 h-4 w-4 text-xs p-0 flex items-center justify-center"
                 >
-                  {unreadCount}
+                  {getUnreadCount()}
                 </Badge>
               )}
             </Button>
@@ -295,15 +342,16 @@ export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderPro
               </DialogDescription>
             </DialogHeader>
             <div className="max-h-96 overflow-y-auto">
-              {notifications.length === 0 ? (
+              {localNotifications.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No notifications yet</p>
+                  <p className="text-xs mt-2">Local notifications will appear here</p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {notifications.map((notification) => (
-                    <div 
+                  {localNotifications.map((notification) => (
+                    <div
                       key={notification.id}
                       className={`p-3 border rounded-lg cursor-pointer transition-colors ${
                         notification.read ? 'bg-muted/50' : 'bg-background border-primary/20'
@@ -315,7 +363,7 @@ export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderPro
                           <h4 className="font-medium text-sm">{notification.title}</h4>
                           <p className="text-sm text-muted-foreground">{notification.message}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(notification.created_at).toLocaleDateString()}
+                            {notification.timestamp.toLocaleDateString()}
                           </p>
                         </div>
                         {!notification.read && (
@@ -347,16 +395,35 @@ export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderPro
               <p className="text-sm text-muted-foreground">
                 Access your account settings and preferences.
               </p>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => {
-                  setShowSettings(false)
-                  onNavigateToProfile?.()
-                }}
-              >
-                Go to Profile Settings
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setShowSettings(false)
+                    onNavigateToProfile?.()
+                  }}
+                >
+                  Go to Profile Settings
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => {
+                    scheduleNotification(
+                      "Test Notification",
+                      "Local notifications are working! 🎉"
+                    )
+                    toast({
+                      title: "Test notification sent",
+                      description: "Check your notification panel or home screen"
+                    })
+                  }}
+                >
+                  Test Notifications
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

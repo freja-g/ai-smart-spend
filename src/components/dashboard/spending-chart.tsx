@@ -1,41 +1,42 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 import { ChartContainer } from '@/components/ui/chart-container'
 import { useFinancialStore } from '@/store/financial-store'
+import { useMemo } from 'react'
 
 interface SpendingChartProps {
   variant?: 'pie' | 'bar'
 }
 
 export function SpendingChart({ variant = 'pie' }: SpendingChartProps) {
-  const { getSpendingByCategory} = useFinancialStore()
-  // ⚡ Dynamically calculate monthly income & expenses
-const allTransactions = useFinancialStore.getState().transactions || [] // depends on how it's structured
-console.log("Raw transactions:", allTransactions)
-const monthlyTotals: Record<string, { income: number; expenses: number }> = {}
+  const { transactions, getSpendingByCategory } = useFinancialStore()
 
-allTransactions.forEach((tx: any) => {
-  const month = new Date(tx.date).toLocaleString('default', { month: 'short' }) // e.g., "Aug"
-  if (!monthlyTotals[month]) {
-    monthlyTotals[month] = { income: 0, expenses: 0 }
-  }
+  // Memoize monthly data calculation to prevent unnecessary re-renders
+  const monthlyData = useMemo(() => {
+    const monthlyTotals: Record<string, { income: number; expenses: number }> = {}
 
-  if (tx.type === 'income') {
-  monthlyTotals[month].income += tx.amount
-} else if (tx.type === 'expense') {
-  monthlyTotals[month].expenses += Math.abs(tx.amount)
-}
-})
+    transactions.forEach((tx) => {
+      const month = new Date(tx.date).toLocaleString('default', { month: 'short' })
+      if (!monthlyTotals[month]) {
+        monthlyTotals[month] = { income: 0, expenses: 0 }
+      }
 
-// Convert to array
-const monthlyData = Object.entries(monthlyTotals).map(([month, values]) => ({
-  month,
-  income: values.income,
-  expenses: values.expenses,
-}))
-console.log("Monthly data:", monthlyData)
-  // Convert spending data to chart format
-  const spendingByCategory = getSpendingByCategory()
-  const spendingData = Object.entries(spendingByCategory).map(([category, amount], index) => {
+      if (tx.type === 'income') {
+        monthlyTotals[month].income += tx.amount
+      } else if (tx.type === 'expense') {
+        monthlyTotals[month].expenses += Math.abs(tx.amount)
+      }
+    })
+
+    return Object.entries(monthlyTotals).map(([month, values]) => ({
+      month,
+      income: values.income,
+      expenses: values.expenses,
+    }))
+  }, [transactions])
+
+  // Memoize spending data calculation
+  const spendingData = useMemo(() => {
+    const spendingByCategory = getSpendingByCategory()
     const colors = [
       'hsl(var(--expense-color))',
       'hsl(var(--primary))',
@@ -43,13 +44,13 @@ console.log("Monthly data:", monthlyData)
       'hsl(var(--accent))',
       'hsl(var(--destructive))'
     ]
-    return {
+
+    return Object.entries(spendingByCategory).map(([category, amount], index) => ({
       name: category,
       value: amount,
       color: colors[index % colors.length]
-    }
-  })
-  console.log("📊 Final monthlyData", monthlyData)
+    }))
+  }, [getSpendingByCategory])
   if (variant === 'bar') {
     return (
       <ChartContainer 

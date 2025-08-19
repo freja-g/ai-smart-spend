@@ -8,10 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState } from "react"
 import { useFinancialStore } from "@/store/financial-store"
 import { useToast } from "@/hooks/use-toast"
+import { importTransactionsFromCSV, importBudgetFromFile } from "@/store/financial-store"
 
 export function QuickActions() {
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false)
   const [isAddGoalOpen, setIsAddGoalOpen] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const { addTransaction, addGoal } = useFinancialStore()
   const { toast } = useToast()
 
@@ -79,6 +81,31 @@ export function QuickActions() {
     })
   }
 
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>, type: 'transactions' | 'budget') => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const content = e.target?.result as string
+
+      let result
+      if (type === 'transactions') {
+        result = importTransactionsFromCSV(content)
+      } else {
+        result = importBudgetFromFile(content)
+      }
+
+      toast({
+        title: result.success ? "Import Successful" : "Import Failed",
+        description: result.message,
+        variant: result.success ? "default" : "destructive"
+      })
+    }
+    reader.readAsText(file)
+    setIsImportOpen(false)
+  }
+
   const quickActionButtons = [
     {
       icon: <Plus className="h-5 w-5" />,
@@ -95,13 +122,50 @@ export function QuickActions() {
       variant: "secondary" as const
     },
     {
-      icon: <FileUp className="h-5 w-5" />,
+      icon: <FileDown className="h-5 w-5" />,
       label: "Export Data",
       description: "Download your data",
       action: () => {
+        const { transactions, budgets, goals } = useFinancialStore.getState()
+
+        if (transactions.length === 0 && budgets.length === 0 && goals.length === 0) {
+          toast({
+            title: "No Data to Export",
+            description: "Add some transactions, budgets, or goals first",
+            variant: "destructive"
+          })
+          return
+        }
+
+        // Export all data as a combined CSV
+        let csvContent = 'type,description,amount,category,date,budgeted,spent,month,targetAmount,currentAmount,deadline,goalName\n'
+
+        // Add transactions
+        transactions.forEach(t => {
+          csvContent += `transaction,"${t.description}",${t.amount},"${t.category}","${t.date.toISOString().split('T')[0]}",,,,,,,\n`
+        })
+
+        // Add budgets
+        budgets.forEach(b => {
+          csvContent += `budget,,,${b.category},,${b.budgeted},${b.spent},"${b.month}",,,,,\n`
+        })
+
+        // Add goals
+        goals.forEach(g => {
+          csvContent += `goal,,,,,,,,"${g.targetAmount}","${g.currentAmount}","${g.deadline.toISOString().split('T')[0]}","${g.name}"\n`
+        })
+
+        const blob = new Blob([csvContent], { type: 'text/csv' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'smartspend-data.csv'
+        a.click()
+        window.URL.revokeObjectURL(url)
+
         toast({
-          title: "Export Started",
-          description: "Your data export is being prepared"
+          title: "Export Successful",
+          description: "Your financial data has been downloaded"
         })
       },
       variant: "outline" as const
@@ -110,12 +174,7 @@ export function QuickActions() {
       icon: <FileUp className="h-5 w-5" />,
       label: "Import Data",
       description: "Upload CSV file",
-      action: () => {
-        toast({
-          title: "Import",
-          description: "Import feature coming soon"
-        })
-      },
+      action: () => setIsImportOpen(true),
       variant: "outline" as const
     }
   ]
@@ -277,6 +336,44 @@ export function QuickActions() {
               <Button variant="outline" onClick={() => setIsAddGoalOpen(false)}>
                 Cancel
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Data Dialog */}
+      <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Financial Data</DialogTitle>
+            <DialogDescription>
+              Import your transactions or budget from CSV files
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="transactions-file">Import Transactions (CSV)</Label>
+              <Input
+                id="transactions-file"
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                onChange={(e) => handleFileImport(e, 'transactions')}
+              />
+              <p className="text-xs text-muted-foreground">
+                Expected columns: description, amount, category, date, type
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="budget-file">Import Budget (CSV)</Label>
+              <Input
+                id="budget-file"
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                onChange={(e) => handleFileImport(e, 'budget')}
+              />
+              <p className="text-xs text-muted-foreground">
+                Expected columns: category, budgeted, spent, month
+              </p>
             </div>
           </div>
         </DialogContent>
