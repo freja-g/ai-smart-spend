@@ -329,51 +329,39 @@ export function ProfileView() {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   <Bell className="h-5 w-5" />
-                  Notifications
+                  Local Notifications
                 </h3>
-                {notificationsError ? (
-                  <div className="text-center py-8">
-                    <Bell className="h-12 w-12 mx-auto text-destructive mb-4" />
-                    <p className="text-sm font-medium text-destructive">Failed to load notifications</p>
-                    <p className="text-xs mt-1 text-muted-foreground">{notificationsError}</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-3"
-                      onClick={fetchNotifications}
-                    >
-                      Try Again
-                    </Button>
+                <div className="p-4 border rounded-lg bg-muted/30">
+                  <h4 className="font-medium mb-2">Notification Settings</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    SmartSpend uses local notifications to alert you about:
+                  </p>
+                  <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                    <li>• Budget alerts when you reach 80% of your spending limit</li>
+                    <li>• Goal progress when you reach 75% of your savings target</li>
+                    <li>• Financial milestones and achievements</li>
+                  </ul>
+                  <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                    <p className="text-xs text-primary font-medium">
+                      📱 Android Users: Make sure notifications are enabled in your device settings for the best experience.
+                    </p>
                   </div>
-                ) : notifications.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No notifications yet</p>
+                </div>
+
+                <div className="p-4 border rounded-lg">
+                  <h4 className="font-medium mb-2">Current Status</h4>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Local Notifications</span>
+                    <Badge variant={profile.local_notifications_enabled ? "default" : "secondary"}>
+                      {profile.local_notifications_enabled ? "Enabled" : "Disabled"}
+                    </Badge>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {notifications.map((notification) => (
-                      <div 
-                        key={notification.id}
-                        className={`p-3 border rounded-lg ${notification.read ? 'bg-muted/50' : 'bg-background'}`}
-                        onClick={() => !notification.read && markNotificationAsRead(notification.id)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-medium">{notification.title}</h4>
-                            <p className="text-sm text-muted-foreground">{notification.message}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {new Date(notification.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                          {!notification.read && (
-                            <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2"></div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  {!profile.local_notifications_enabled && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Enable notifications in the Profile section to receive alerts.
+                    </p>
+                  )}
+                </div>
               </div>
             )}
 
