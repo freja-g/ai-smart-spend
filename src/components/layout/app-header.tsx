@@ -342,29 +342,16 @@ export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderPro
               </DialogDescription>
             </DialogHeader>
             <div className="max-h-96 overflow-y-auto">
-              {notificationsError ? (
-                <div className="text-center py-8 text-destructive">
-                  <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-sm font-medium">Failed to load notifications</p>
-                  <p className="text-xs mt-1 text-muted-foreground">{notificationsError}</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-3"
-                    onClick={fetchNotifications}
-                  >
-                    Try Again
-                  </Button>
-                </div>
-              ) : notifications.length === 0 ? (
+              {localNotifications.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No notifications yet</p>
+                  <p className="text-xs mt-2">Local notifications will appear here</p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {notifications.map((notification) => (
-                    <div 
+                  {localNotifications.map((notification) => (
+                    <div
                       key={notification.id}
                       className={`p-3 border rounded-lg cursor-pointer transition-colors ${
                         notification.read ? 'bg-muted/50' : 'bg-background border-primary/20'
@@ -376,7 +363,7 @@ export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderPro
                           <h4 className="font-medium text-sm">{notification.title}</h4>
                           <p className="text-sm text-muted-foreground">{notification.message}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(notification.created_at).toLocaleDateString()}
+                            {notification.timestamp.toLocaleDateString()}
                           </p>
                         </div>
                         {!notification.read && (
