@@ -95,13 +95,50 @@ export function QuickActions() {
       variant: "secondary" as const
     },
     {
-      icon: <FileUp className="h-5 w-5" />,
+      icon: <FileDown className="h-5 w-5" />,
       label: "Export Data",
       description: "Download your data",
       action: () => {
+        const { transactions, budgets, goals } = useFinancialStore.getState()
+
+        if (transactions.length === 0 && budgets.length === 0 && goals.length === 0) {
+          toast({
+            title: "No Data to Export",
+            description: "Add some transactions, budgets, or goals first",
+            variant: "destructive"
+          })
+          return
+        }
+
+        // Export all data as a combined CSV
+        let csvContent = 'type,description,amount,category,date,budgeted,spent,month,targetAmount,currentAmount,deadline,goalName\n'
+
+        // Add transactions
+        transactions.forEach(t => {
+          csvContent += `transaction,"${t.description}",${t.amount},"${t.category}","${t.date.toISOString().split('T')[0]}",,,,,,,\n`
+        })
+
+        // Add budgets
+        budgets.forEach(b => {
+          csvContent += `budget,,,${b.category},,${b.budgeted},${b.spent},"${b.month}",,,,,\n`
+        })
+
+        // Add goals
+        goals.forEach(g => {
+          csvContent += `goal,,,,,,,,"${g.targetAmount}","${g.currentAmount}","${g.deadline.toISOString().split('T')[0]}","${g.name}"\n`
+        })
+
+        const blob = new Blob([csvContent], { type: 'text/csv' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'smartspend-data.csv'
+        a.click()
+        window.URL.revokeObjectURL(url)
+
         toast({
-          title: "Export Started",
-          description: "Your data export is being prepared"
+          title: "Export Successful",
+          description: "Your financial data has been downloaded"
         })
       },
       variant: "outline" as const
