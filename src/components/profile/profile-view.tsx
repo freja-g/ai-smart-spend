@@ -179,6 +179,85 @@ export function ProfileView() {
     })
   }
 
+  const handleExport = (type: 'transactions' | 'budget' | 'goals' | 'all') => {
+    let csvContent = ''
+    let filename = ''
+
+    if (type === 'all') {
+      csvContent = 'type,description,amount,category,date,budgeted,spent,month,targetAmount,currentAmount,deadline,goalName\n'
+
+      transactions.forEach(t => {
+        csvContent += `transaction,"${t.description}",${t.amount},"${t.category}","${t.date.toISOString().split('T')[0]}",,,,,,,\n`
+      })
+
+      budgets.forEach(b => {
+        csvContent += `budget,,,${b.category},,${b.budgeted},${b.spent},"${b.month}",,,,,\n`
+      })
+
+      goals.forEach(g => {
+        csvContent += `goal,,,,,,,,"${g.targetAmount}","${g.currentAmount}","${g.deadline.toISOString().split('T')[0]}","${g.name}"\n`
+      })
+
+      filename = 'smartspend-complete-data.csv'
+    } else if (type === 'transactions') {
+      csvContent = 'description,amount,category,date,type\n'
+      transactions.forEach(t => {
+        csvContent += `"${t.description}",${t.amount},"${t.category}","${t.date.toISOString().split('T')[0]}","${t.type}"\n`
+      })
+      filename = 'transactions.csv'
+    } else if (type === 'budget') {
+      csvContent = 'category,budgeted,spent,month\n'
+      budgets.forEach(b => {
+        csvContent += `"${b.category}",${b.budgeted},${b.spent},"${b.month}"\n`
+      })
+      filename = 'budget.csv'
+    } else if (type === 'goals') {
+      csvContent = 'name,targetAmount,currentAmount,deadline,description\n'
+      goals.forEach(g => {
+        csvContent += `"${g.name}",${g.targetAmount},${g.currentAmount},"${g.deadline.toISOString().split('T')[0]}","${g.description || ''}"\n`
+      })
+      filename = 'goals.csv'
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    window.URL.revokeObjectURL(url)
+
+    toast({
+      title: "Export Successful",
+      description: `${filename} has been downloaded.`
+    })
+  }
+
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>, type: 'transactions' | 'budget') => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const content = e.target?.result as string
+
+      let result
+      if (type === 'transactions') {
+        result = importTransactionsFromCSV(content)
+      } else {
+        result = importBudgetFromFile(content)
+      }
+
+      toast({
+        title: result.success ? "Import Successful" : "Import Failed",
+        description: result.message,
+        variant: result.success ? "default" : "destructive"
+      })
+    }
+    reader.readAsText(file)
+    setShowImport(false)
+  }
+
   const menuItems = [
     { id: "profile", label: "Profile Info", icon: User },
     { id: "notifications", label: "Notifications", icon: Bell },
