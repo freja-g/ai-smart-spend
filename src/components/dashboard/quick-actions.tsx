@@ -81,6 +81,31 @@ export function QuickActions() {
     })
   }
 
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>, type: 'transactions' | 'budget') => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const content = e.target?.result as string
+
+      let result
+      if (type === 'transactions') {
+        result = importTransactionsFromCSV(content)
+      } else {
+        result = importBudgetFromFile(content)
+      }
+
+      toast({
+        title: result.success ? "Import Successful" : "Import Failed",
+        description: result.message,
+        variant: result.success ? "default" : "destructive"
+      })
+    }
+    reader.readAsText(file)
+    setIsImportOpen(false)
+  }
+
   const quickActionButtons = [
     {
       icon: <Plus className="h-5 w-5" />,
