@@ -1,6 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 import { ChartContainer } from '@/components/ui/chart-container'
 import { useFinancialStore } from '@/store/financial-store'
+import { useMemo } from 'react'
 
 interface SpendingChartProps {
   variant?: 'pie' | 'bar'
