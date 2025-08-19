@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from 'recharts'
 import { useFinancialStore } from "@/store/financial-store"
 import { format, subMonths, startOfMonth } from "date-fns"
+import { useMemo } from "react"
 
 export function FinancialTrends() {
   const { transactions } = useFinancialStore()
