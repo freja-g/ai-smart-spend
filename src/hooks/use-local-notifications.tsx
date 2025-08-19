@@ -75,27 +75,57 @@ export const useLocalNotifications = () => {
     };
   }, [user, toast]);
 
-  const scheduleNotification = async (title: string, body: string, scheduleAt?: Date) => {
+  const scheduleNotification = useCallback(async (title: string, body: string, scheduleAt?: Date) => {
     try {
+      const isNative = Capacitor.isNativePlatform();
+
+      if (!isNative) {
+        // For web, show as toast
+        toast({
+          title,
+          description: body,
+        });
+        return;
+      }
+
+      // Check permission before scheduling
+      const permissionStatus = await LocalNotifications.checkPermissions();
+      if (permissionStatus.display !== 'granted') {
+        console.log('Cannot schedule notification - permission not granted');
+        return;
+      }
+
+      const notificationId = Date.now();
+
       await LocalNotifications.schedule({
         notifications: [
           {
             title,
             body,
-            id: Date.now(),
+            id: notificationId,
             schedule: scheduleAt ? { at: scheduleAt } : undefined,
             sound: 'default',
-            attachments: undefined,
-            actionTypeId: '',
-            extra: {}
+            actionTypeId: 'OPEN_APP',
+            extra: {
+              timestamp: new Date().toISOString()
+            },
+            smallIcon: 'ic_notification',
+            iconColor: '#007BFF'
           }
         ]
       });
-      console.log('Local notification scheduled');
+
+      console.log(`Local notification scheduled with ID: ${notificationId}`);
     } catch (error) {
       console.error('Error scheduling local notification:', error);
+
+      // Fallback to toast if notification fails
+      toast({
+        title,
+        description: body,
+      });
     }
-  };
+  }, [toast]);
 
   const cancelAllNotifications = async () => {
     try {
