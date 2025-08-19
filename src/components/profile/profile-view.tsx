@@ -95,23 +95,12 @@ export function ProfileView() {
 
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          display_name: profile.display_name,
-          phone: profile.phone,
-          notifications_enabled: profile.notifications_enabled,
-          push_notifications_enabled: profile.local_notifications_enabled
-        })
-        .eq('user_id', user.id)
+      // Save profile to localStorage
+      localStorage.setItem(`profile_${user.id}`, JSON.stringify(profile))
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update profile. Please try again.",
-          variant: "destructive"
-        })
-        return
+      // Handle notification settings
+      if (!profile.local_notifications_enabled) {
+        await cancelAllNotifications()
       }
 
       toast({
@@ -126,31 +115,6 @@ export function ProfileView() {
       })
     } finally {
       setLoading(false)
-    }
-  }
-
-  const markNotificationAsRead = async (notificationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId)
-
-      if (!error) {
-        setNotifications(prev => 
-          prev.map(notif => 
-            notif.id === notificationId 
-              ? { ...notif, read: true }
-              : notif
-          )
-        )
-      }
-    } catch (error) {
-      console.error('Error marking notification as read:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        notificationId,
-        error
-      })
     }
   }
 
