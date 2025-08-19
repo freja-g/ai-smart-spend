@@ -8,8 +8,14 @@ import { FinancialTrends } from "./financial-trends"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus,FileUp,FileDown, Target } from "lucide-react"
-import { useFinancialStore } from "@/store/financial-store"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Plus, Upload, Target } from "lucide-react"
+import { useFinancialStore, importTransactionsFromCSV, importBudgetFromFile } from "@/store/financial-store"
+import { useToast } from "@/hooks/use-toast"
+import { useState } from "react"
 
 export function DashboardView() {
   const { transactions, budgets, goals } = useFinancialStore()
