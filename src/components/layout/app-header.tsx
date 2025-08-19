@@ -33,95 +33,83 @@ export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderPro
   const [showExport, setShowExport] = useState(false)
   const { transactions, budgets, goals } = useFinancialStore()
 
+  // Generate local notifications based on financial data
   useEffect(() => {
-    if (user) {
-      fetchNotifications()
-    }
-  }, [user])
+    if (!user || !transactions.length) return
 
-  const fetchNotifications = async () => {
-    if (!user) {
-      console.log('No user available for notification fetching')
-      return
-    }
+    const checkBudgetAlerts = () => {
+      const currentMonth = new Date().toISOString().slice(0, 7)
+      const monthlyExpenses = transactions
+        .filter(t => t.type === 'expense' && t.date.toISOString().startsWith(currentMonth))
+        .reduce((total, t) => total + Math.abs(t.amount), 0)
 
-    try {
-      console.log('Fetching notifications for user:', user.id)
+      const monthlyBudget = budgets.reduce((total, b) => total + b.budgeted, 0)
 
-      // First, check if the user has a profile
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .single()
-
-      if (profileError) {
-        console.error('Profile check failed:', {
-          message: profileError.message,
-          details: profileError.details,
-          hint: profileError.hint,
-          code: profileError.code,
-          userId: user.id
-        })
-
-        // If profile doesn't exist, create one
-        if (profileError.code === 'PGRST116') { // No rows found
-          console.log('Profile not found, creating profile for user:', user.id)
-          const { error: createError } = await supabase
-            .from('profiles')
-            .insert({
-              user_id: user.id,
-              email: user.email,
-              display_name: user.user_metadata?.display_name || null
-            })
-
-          if (createError) {
-            console.error('Failed to create profile:', createError)
-            return
-          } else {
-            console.log('Profile created successfully')
-          }
-        } else {
-          return
+      if (monthlyBudget > 0 && monthlyExpenses > monthlyBudget * 0.8) {
+        const notification = {
+          id: `budget-alert-${Date.now()}`,
+          title: 'Budget Alert',
+          message: `You've spent 80% of your monthly budget`,
+          timestamp: new Date(),
+          read: false
         }
-      } else {
-        console.log('Profile exists for user:', user.id)
-      }
 
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10)
-
-      if (error) {
-        console.error('Error fetching notifications:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code,
-          userId: user.id,
-          error
+        setLocalNotifications(prev => {
+          // Don't add duplicate alerts
+          if (prev.some(n => n.title === 'Budget Alert' && !n.read)) return prev
+          return [notification, ...prev.slice(0, 9)]
         })
-        setNotificationsError(`Failed to load notifications: ${error.message}`)
-        setNotifications([])
-        setUnreadCount(0)
-        return
-      }
 
-      console.log('Notifications fetched successfully:', data?.length || 0, 'notifications')
-      setNotifications(data || [])
-      setUnreadCount(data?.filter(n => !n.read).length || 0)
-      setNotificationsError(null) // Clear any previous errors
-    } catch (error) {
-      console.error('Unexpected error fetching notifications:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        userId: user?.id,
-        error
+        scheduleNotification(notification.title, notification.message)
+      }
+    }
+
+    const checkGoalProgress = () => {
+      goals.forEach(goal => {
+        const progress = (goal.currentAmount / goal.targetAmount) * 100
+
+        if (progress >= 75 && progress < 100) {
+          const notification = {
+            id: `goal-progress-${goal.id}-${Date.now()}`,
+            title: 'Goal Progress',
+            message: `You're ${progress.toFixed(0)}% towards your ${goal.name} goal!`,
+            timestamp: new Date(),
+            read: false
+          }
+
+          setLocalNotifications(prev => {
+            // Don't add duplicate goal notifications
+            if (prev.some(n => n.message.includes(goal.name) && !n.read)) return prev
+            return [notification, ...prev.slice(0, 9)]
+          })
+
+          scheduleNotification(notification.title, notification.message)
+        }
       })
     }
+
+    checkBudgetAlerts()
+    checkGoalProgress()
+  }, [user, transactions, budgets, goals, scheduleNotification])
+
+  const addWelcomeNotification = () => {
+    if (localNotifications.length === 0) {
+      const welcomeNotification = {
+        id: `welcome-${Date.now()}`,
+        title: 'Welcome to SmartSpend!',
+        message: 'Start tracking your expenses and achieving your financial goals.',
+        timestamp: new Date(),
+        read: false
+      }
+      setLocalNotifications([welcomeNotification])
+    }
   }
+
+  useEffect(() => {
+    if (user) {
+      addWelcomeNotification()
+    }
+  }, [user])
 
   const markNotificationAsRead = async (notificationId: string) => {
     try {
