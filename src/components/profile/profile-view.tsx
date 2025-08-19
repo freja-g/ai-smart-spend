@@ -51,106 +51,43 @@ export function ProfileView() {
 
   useEffect(() => {
     if (user) {
-      fetchProfile()
-      fetchNotifications()
+      loadProfile()
     }
   }, [user])
 
-  const fetchProfile = async () => {
+  const loadProfile = () => {
     if (!user) return
 
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle()
+    // Load profile from localStorage or use defaults
+    const savedProfile = localStorage.getItem(`profile_${user.id}`)
 
-      if (error) {
-        console.error('Error fetching profile:', error)
-        return
-      }
-
-      if (data) {
+    if (savedProfile) {
+      try {
+        const parsedProfile = JSON.parse(savedProfile)
         setProfile({
-          display_name: data.display_name || "",
-          email: data.email || user.email || "",
-          phone: data.phone || "",
-          notifications_enabled: data.notifications_enabled ?? true,
-          local_notifications_enabled: data.push_notifications_enabled ?? true
+          display_name: parsedProfile.display_name || user.user_metadata?.display_name || "",
+          email: user.email || "",
+          phone: parsedProfile.phone || "",
+          local_notifications_enabled: parsedProfile.local_notifications_enabled ?? true
         })
+      } catch (error) {
+        console.error('Error loading profile from localStorage:', error)
+        setDefaultProfile()
       }
-    } catch (error) {
-      console.error('Error:', error)
+    } else {
+      setDefaultProfile()
     }
   }
 
-  const fetchNotifications = async () => {
-    if (!user) {
-      console.log('No user available for notification fetching in profile')
-      return
-    }
+  const setDefaultProfile = () => {
+    if (!user) return
 
-    try {
-      console.log('Fetching notifications in profile for user:', user.id)
-
-      // First, check if the user has a profile
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .single()
-
-      if (profileError) {
-        console.error('Profile check failed in profile view:', {
-          message: profileError.message,
-          details: profileError.details,
-          hint: profileError.hint,
-          code: profileError.code,
-          userId: user.id
-        })
-
-        // If profile doesn't exist, notifications will fail too
-        if (profileError.code === 'PGRST116') { // No rows found
-          console.log('Profile not found in profile view for user:', user.id)
-          setNotifications([]) // Set empty notifications if no profile
-          return
-        } else {
-          return
-        }
-      }
-
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10)
-
-      if (error) {
-        console.error('Error fetching notifications in profile view:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code,
-          userId: user.id,
-          error
-        })
-        setNotificationsError(`Failed to load notifications: ${error.message}`)
-        setNotifications([])
-        return
-      }
-
-      console.log('Notifications fetched successfully in profile view:', data?.length || 0, 'notifications')
-      setNotifications(data || [])
-      setNotificationsError(null) // Clear any previous errors
-    } catch (error) {
-      console.error('Unexpected error fetching notifications in profile view:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        userId: user?.id,
-        error
-      })
-    }
+    setProfile({
+      display_name: user.user_metadata?.display_name || "",
+      email: user.email || "",
+      phone: "",
+      local_notifications_enabled: true
+    })
   }
 
   const handleProfileUpdate = async () => {
