@@ -22,6 +22,7 @@ export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderPro
   const [notifications, setNotifications] = useState<any[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [notificationsError, setNotificationsError] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showExport, setShowExport] = useState(false)
