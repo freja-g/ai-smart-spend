@@ -111,30 +111,18 @@ export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderPro
     }
   }, [user])
 
-  const markNotificationAsRead = async (notificationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId)
+  const markNotificationAsRead = (notificationId: string) => {
+    setLocalNotifications(prev =>
+      prev.map(notif =>
+        notif.id === notificationId
+          ? { ...notif, read: true }
+          : notif
+      )
+    )
+  }
 
-      if (!error) {
-        setNotifications(prev => 
-          prev.map(notif => 
-            notif.id === notificationId 
-              ? { ...notif, read: true }
-              : notif
-          )
-        )
-        setUnreadCount(prev => Math.max(0, prev - 1))
-      }
-    } catch (error) {
-      console.error('Error marking notification as read:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        notificationId,
-        error
-      })
-    }
+  const getUnreadCount = () => {
+    return localNotifications.filter(n => !n.read).length
   }
 
   const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>, type: 'transactions' | 'budget') => {
