@@ -29,26 +29,23 @@ interface UserProfile {
   display_name: string
   email: string
   phone: string
-  notifications_enabled: boolean
   local_notifications_enabled: boolean
 }
 
 export function ProfileView() {
   const { user, signOut } = useAuth()
   const { toast } = useToast()
-  
+  const { cancelAllNotifications } = useLocalNotifications()
+
   const [profile, setProfile] = useState<UserProfile>({
     display_name: "",
     email: "",
     phone: "",
-    notifications_enabled: true,
     local_notifications_enabled: true
   })
 
-  const [notifications, setNotifications] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [activeSection, setActiveSection] = useState<string>("profile")
-  const [notificationsError, setNotificationsError] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
   const { transactions, budgets, goals } = useFinancialStore()
 
