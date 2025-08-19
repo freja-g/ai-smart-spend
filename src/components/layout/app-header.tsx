@@ -1,4 +1,4 @@
-import { Bell, Settings, FileUp, FileDown, Download } from "lucide-react"
+import { Bell, Settings, Upload, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { useState, useEffect } from "react"
-import { supabase } from "@/integrations/supabase/client"
 import { useAuth } from "@/hooks/use-auth"
 import { importTransactionsFromCSV, importBudgetFromFile, useFinancialStore } from "@/store/financial-store"
+import { useLocalNotifications } from "@/hooks/use-local-notifications"
 
 interface AppHeaderProps {
   title: string
