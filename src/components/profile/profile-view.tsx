@@ -141,11 +141,14 @@ export function ProfileView() {
           userId: user.id,
           error
         })
+        setNotificationsError(`Failed to load notifications: ${error.message}`)
+        setNotifications([])
         return
       }
 
       console.log('Notifications fetched successfully in profile view:', data?.length || 0, 'notifications')
       setNotifications(data || [])
+      setNotificationsError(null) // Clear any previous errors
     } catch (error) {
       console.error('Unexpected error fetching notifications in profile view:', {
         message: error instanceof Error ? error.message : 'Unknown error',
