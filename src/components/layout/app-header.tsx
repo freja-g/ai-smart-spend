@@ -34,9 +34,54 @@ export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderPro
   }, [user])
 
   const fetchNotifications = async () => {
-    if (!user) return
+    if (!user) {
+      console.log('No user available for notification fetching')
+      return
+    }
 
     try {
+      console.log('Fetching notifications for user:', user.id)
+
+      // First, check if the user has a profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (profileError) {
+        console.error('Profile check failed:', {
+          message: profileError.message,
+          details: profileError.details,
+          hint: profileError.hint,
+          code: profileError.code,
+          userId: user.id
+        })
+
+        // If profile doesn't exist, create one
+        if (profileError.code === 'PGRST116') { // No rows found
+          console.log('Profile not found, creating profile for user:', user.id)
+          const { error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: user.id,
+              email: user.email,
+              display_name: user.user_metadata?.display_name || null
+            })
+
+          if (createError) {
+            console.error('Failed to create profile:', createError)
+            return
+          } else {
+            console.log('Profile created successfully')
+          }
+        } else {
+          return
+        }
+      } else {
+        console.log('Profile exists for user:', user.id)
+      }
+
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -50,16 +95,19 @@ export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderPro
           details: error.details,
           hint: error.hint,
           code: error.code,
+          userId: user.id,
           error
         })
         return
       }
 
+      console.log('Notifications fetched successfully:', data?.length || 0, 'notifications')
       setNotifications(data || [])
       setUnreadCount(data?.filter(n => !n.read).length || 0)
     } catch (error) {
       console.error('Unexpected error fetching notifications:', {
         message: error instanceof Error ? error.message : 'Unknown error',
+        userId: user?.id,
         error
       })
     }
