@@ -50,6 +50,7 @@ export function ProfileView() {
   const [notifications, setNotifications] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [activeSection, setActiveSection] = useState<string>("profile")
+  const [notificationsError, setNotificationsError] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
   const { transactions, budgets, goals } = useFinancialStore()
 
