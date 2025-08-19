@@ -179,6 +179,168 @@ export function DashboardView() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Add Transaction Dialog */}
+          <Dialog open={isAddTransactionOpen} onOpenChange={setIsAddTransactionOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Transaction</DialogTitle>
+                <DialogDescription>
+                  Record a new income or expense transaction
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Input
+                    id="description"
+                    value={transactionForm.description}
+                    onChange={(e) => setTransactionForm(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="e.g., Grocery shopping"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="amount">Amount</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    value={transactionForm.amount}
+                    onChange={(e) => setTransactionForm(prev => ({ ...prev, amount: e.target.value }))}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="type">Type</Label>
+                  <Select
+                    value={transactionForm.type}
+                    onValueChange={(value) => setTransactionForm(prev => ({ ...prev, type: value as "income" | "expense" }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="expense">Expense</SelectItem>
+                      <SelectItem value="income">Income</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={transactionForm.category}
+                    onValueChange={(value) => setTransactionForm(prev => ({ ...prev, category: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button onClick={handleAddTransaction} className="flex-1">
+                    Add Transaction
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsAddTransactionOpen(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Add Goal Dialog */}
+          <Dialog open={isAddGoalOpen} onOpenChange={setIsAddGoalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create Savings Goal</DialogTitle>
+                <DialogDescription>
+                  Set a new target to save towards
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="goalName">Goal Name</Label>
+                  <Input
+                    id="goalName"
+                    value={goalForm.name}
+                    onChange={(e) => setGoalForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="e.g., Emergency Fund"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="targetAmount">Target Amount</Label>
+                  <Input
+                    id="targetAmount"
+                    type="number"
+                    value={goalForm.targetAmount}
+                    onChange={(e) => setGoalForm(prev => ({ ...prev, targetAmount: e.target.value }))}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="deadline">Deadline</Label>
+                  <Input
+                    id="deadline"
+                    type="date"
+                    value={goalForm.deadline}
+                    onChange={(e) => setGoalForm(prev => ({ ...prev, deadline: e.target.value }))}
+                  />
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button onClick={handleAddGoal} className="flex-1">
+                    Create Goal
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsAddGoalOpen(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Import Data Dialog */}
+          <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Import Financial Data</DialogTitle>
+                <DialogDescription>
+                  Import your transactions or budget from CSV files
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="transactions-file">Import Transactions (CSV)</Label>
+                  <Input
+                    id="transactions-file"
+                    type="file"
+                    accept=".csv,.xlsx,.xls"
+                    onChange={(e) => handleFileImport(e, 'transactions')}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Expected columns: description, amount, category, date, type
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="budget-file">Import Budget (CSV)</Label>
+                  <Input
+                    id="budget-file"
+                    type="file"
+                    accept=".csv,.xlsx,.xls"
+                    onChange={(e) => handleFileImport(e, 'budget')}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Expected columns: category, budgeted, spent, month
+                  </p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </ScrollArea>
     )
