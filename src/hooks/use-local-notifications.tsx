@@ -127,14 +127,30 @@ export const useLocalNotifications = () => {
     }
   }, [toast]);
 
-  const cancelAllNotifications = async () => {
+  const cancelAllNotifications = useCallback(async () => {
     try {
-      await LocalNotifications.cancel({ notifications: [] });
-      console.log('All local notifications cancelled');
+      const isNative = Capacitor.isNativePlatform();
+
+      if (!isNative) {
+        console.log('Running on web - no notifications to cancel');
+        return;
+      }
+
+      // Get all pending notifications first
+      const pending = await LocalNotifications.getPending();
+
+      if (pending.notifications.length > 0) {
+        await LocalNotifications.cancel({
+          notifications: pending.notifications.map(n => ({ id: n.id }))
+        });
+        console.log(`Cancelled ${pending.notifications.length} local notifications`);
+      } else {
+        console.log('No pending notifications to cancel');
+      }
     } catch (error) {
       console.error('Error cancelling notifications:', error);
     }
-  };
+  }, []);
 
   return {
     scheduleNotification,
