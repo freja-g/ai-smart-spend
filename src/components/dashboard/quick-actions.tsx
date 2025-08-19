@@ -13,6 +13,7 @@ import { importTransactionsFromCSV, importBudgetFromFile } from "@/store/financi
 export function QuickActions() {
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false)
   const [isAddGoalOpen, setIsAddGoalOpen] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const { addTransaction, addGoal } = useFinancialStore()
   const { toast } = useToast()
 
