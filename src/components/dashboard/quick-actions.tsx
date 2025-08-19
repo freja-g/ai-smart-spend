@@ -340,6 +340,44 @@ export function QuickActions() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Import Data Dialog */}
+      <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Financial Data</DialogTitle>
+            <DialogDescription>
+              Import your transactions or budget from CSV files
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="transactions-file">Import Transactions (CSV)</Label>
+              <Input
+                id="transactions-file"
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                onChange={(e) => handleFileImport(e, 'transactions')}
+              />
+              <p className="text-xs text-muted-foreground">
+                Expected columns: description, amount, category, date, type
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="budget-file">Import Budget (CSV)</Label>
+              <Input
+                id="budget-file"
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                onChange={(e) => handleFileImport(e, 'budget')}
+              />
+              <p className="text-xs text-muted-foreground">
+                Expected columns: category, budgeted, spent, month
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
