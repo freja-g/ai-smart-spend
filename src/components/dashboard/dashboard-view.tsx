@@ -140,29 +140,29 @@ export function DashboardView() {
                   <p className="text-sm text-muted-foreground mb-4">
                     Start by manually adding your income and expenses
                   </p>
-                  <Button size="sm" className="w-full">
+                  <Button size="sm" className="w-full" onClick={() => setIsAddTransactionOpen(true)}>
                     Add Transaction
                   </Button>
                 </Card>
-                
+
                 <Card className="p-6">
-                  <FileUp className="h-12 w-12 mx-auto mb-4 text-primary" />
+                  <Upload className="h-12 w-12 mx-auto mb-4 text-primary" />
                   <h3 className="font-semibold mb-2">Import Data</h3>
                   <p className="text-sm text-muted-foreground mb-4">
                     Upload your CSV or Excel files to import existing data
                   </p>
-                  <Button size="sm" variant="outline" className="w-full">
+                  <Button size="sm" variant="outline" className="w-full" onClick={() => setIsImportOpen(true)}>
                     Import Files
                   </Button>
                 </Card>
-                
+
                 <Card className="p-6">
                   <Target className="h-12 w-12 mx-auto mb-4 text-primary" />
                   <h3 className="font-semibold mb-2">Set Goals</h3>
                   <p className="text-sm text-muted-foreground mb-4">
                     Create savings goals to track your financial progress
                   </p>
-                  <Button size="sm" variant="outline" className="w-full">
+                  <Button size="sm" variant="outline" className="w-full" onClick={() => setIsAddGoalOpen(true)}>
                     Create Goal
                   </Button>
                 </Card>
