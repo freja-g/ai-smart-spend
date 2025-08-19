@@ -7,13 +7,16 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { 
-  User, 
-  Settings, 
-  Bell, 
-  Shield, 
- FileUp,
- FileDown,
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {
+  User,
+  Settings,
+  Bell,
+  Shield,
+  FileUp,
+  FileDown,
+  Download,
+  Upload,
   Trash2,
   Save,
   Loader2,
@@ -22,7 +25,7 @@ import {
 import { useAuth } from "@/hooks/use-auth"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
-import { clearFinancialData } from "@/store/financial-store"
+import { clearFinancialData, useFinancialStore, importTransactionsFromCSV, importBudgetFromFile } from "@/store/financial-store"
 
 interface UserProfile {
   display_name: string
