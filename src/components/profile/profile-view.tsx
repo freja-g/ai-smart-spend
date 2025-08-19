@@ -13,8 +13,6 @@ import {
   Settings,
   Bell,
   Shield,
-  FileUp,
-  FileDown,
   Download,
   Upload,
   Trash2,
@@ -23,9 +21,9 @@ import {
   LogOut
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
-import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { clearFinancialData, useFinancialStore, importTransactionsFromCSV, importBudgetFromFile } from "@/store/financial-store"
+import { useLocalNotifications } from "@/hooks/use-local-notifications"
 
 interface UserProfile {
   display_name: string
