@@ -174,12 +174,7 @@ export function QuickActions() {
       icon: <FileUp className="h-5 w-5" />,
       label: "Import Data",
       description: "Upload CSV file",
-      action: () => {
-        toast({
-          title: "Import",
-          description: "Import feature coming soon"
-        })
-      },
+      action: () => setIsImportOpen(true),
       variant: "outline" as const
     }
   ]
