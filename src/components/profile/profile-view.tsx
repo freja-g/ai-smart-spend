@@ -307,18 +307,8 @@ export function ProfileView() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium">Email Notifications</p>
-                        <p className="text-sm text-muted-foreground">Receive notifications via email</p>
-                      </div>
-                      <Switch
-                        checked={profile.notifications_enabled}
-                        onCheckedChange={(checked) => setProfile(prev => ({ ...prev, notifications_enabled: checked }))}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
                         <p className="font-medium">Local Notifications</p>
-                        <p className="text-sm text-muted-foreground">Receive local notifications on device</p>
+                        <p className="text-sm text-muted-foreground">Receive notifications on your device for budget alerts and goal progress</p>
                       </div>
                       <Switch
                         checked={profile.local_notifications_enabled}
