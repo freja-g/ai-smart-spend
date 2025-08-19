@@ -19,10 +19,15 @@ interface AppHeaderProps {
 export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderProps) {
   const { toast } = useToast()
   const { user } = useAuth()
-  const [notifications, setNotifications] = useState<any[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
+  const { scheduleNotification } = useLocalNotifications()
+  const [localNotifications, setLocalNotifications] = useState<Array<{
+    id: string
+    title: string
+    message: string
+    timestamp: Date
+    read: boolean
+  }>>([])
   const [showNotifications, setShowNotifications] = useState(false)
-  const [notificationsError, setNotificationsError] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showExport, setShowExport] = useState(false)
