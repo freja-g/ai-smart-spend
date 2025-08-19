@@ -101,13 +101,22 @@ export function ProfileView() {
         .limit(10)
 
       if (error) {
-        console.error('Error fetching notifications:', error)
+        console.error('Error fetching notifications:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          error
+        })
         return
       }
 
       setNotifications(data || [])
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Unexpected error fetching notifications:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        error
+      })
     }
   }
 
