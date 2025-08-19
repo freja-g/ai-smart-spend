@@ -50,6 +50,8 @@ export function ProfileView() {
   const [notifications, setNotifications] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [activeSection, setActiveSection] = useState<string>("profile")
+  const [showImport, setShowImport] = useState(false)
+  const { transactions, budgets, goals } = useFinancialStore()
 
   useEffect(() => {
     if (user) {
