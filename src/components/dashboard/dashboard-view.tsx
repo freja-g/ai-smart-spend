@@ -18,8 +18,108 @@ import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
 
 export function DashboardView() {
-  const { transactions, budgets, goals } = useFinancialStore()
+  const { transactions, budgets, goals, addTransaction, addGoal } = useFinancialStore()
+  const { toast } = useToast()
   const hasData = transactions.length > 0 || budgets.length > 0 || goals.length > 0
+
+  const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false)
+  const [isAddGoalOpen, setIsAddGoalOpen] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
+
+  const [transactionForm, setTransactionForm] = useState({
+    description: "",
+    amount: "",
+    category: "",
+    type: "expense" as "income" | "expense"
+  })
+
+  const [goalForm, setGoalForm] = useState({
+    name: "",
+    targetAmount: "",
+    deadline: ""
+  })
+
+  const categories = [
+    "Food & Dining", "Transportation", "Shopping", "Entertainment",
+    "Bills & Utilities", "Healthcare", "Education", "Travel",
+    "Investment", "Salary", "Freelance", "Business", "Other"
+  ]
+
+  const handleAddTransaction = () => {
+    if (!transactionForm.description || !transactionForm.amount || !transactionForm.category) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive"
+      })
+      return
+    }
+
+    addTransaction({
+      description: transactionForm.description,
+      amount: transactionForm.type === "expense" ? -Math.abs(parseFloat(transactionForm.amount)) : Math.abs(parseFloat(transactionForm.amount)),
+      category: transactionForm.category,
+      date: new Date(),
+      type: transactionForm.type
+    })
+
+    setTransactionForm({ description: "", amount: "", category: "", type: "expense" })
+    setIsAddTransactionOpen(false)
+    toast({
+      title: "Success",
+      description: "Transaction added successfully"
+    })
+  }
+
+  const handleAddGoal = () => {
+    if (!goalForm.name || !goalForm.targetAmount || !goalForm.deadline) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive"
+      })
+      return
+    }
+
+    addGoal({
+      name: goalForm.name,
+      targetAmount: parseFloat(goalForm.targetAmount),
+      currentAmount: 0,
+      deadline: new Date(goalForm.deadline)
+    })
+
+    setGoalForm({ name: "", targetAmount: "", deadline: "" })
+    setIsAddGoalOpen(false)
+    toast({
+      title: "Success",
+      description: "Savings goal created successfully"
+    })
+  }
+
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>, type: 'transactions' | 'budget') => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const content = e.target?.result as string
+
+      let result
+      if (type === 'transactions') {
+        result = importTransactionsFromCSV(content)
+      } else {
+        result = importBudgetFromFile(content)
+      }
+
+      toast({
+        title: result.success ? "Import Successful" : "Import Failed",
+        description: result.message,
+        variant: result.success ? "default" : "destructive"
+      })
+    }
+    reader.readAsText(file)
+    setIsImportOpen(false)
+  }
 
   if (!hasData) {
     return (
