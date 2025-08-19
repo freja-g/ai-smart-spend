@@ -6,9 +6,19 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   plugins: {
     LocalNotifications: {
-      smallIcon: "ic_stat_icon_config_sample",
-      iconColor: "#488AFF",
-      sound: "beep.wav",
+      smallIcon: "ic_notification",
+      iconColor: "#007BFF",
+      sound: "default",
+      requestPermissions: true,
+      actionTypeId: "OPEN_APP",
+      actions: [
+        {
+          id: "view",
+          title: "View",
+          requiresAuthentication: false,
+          foreground: true
+        }
+      ]
     },
   },
   android: {
@@ -19,7 +29,8 @@ const config: CapacitorConfig = {
       keystoreAliasPassword: undefined,
       releaseType: "APK",
       signingType: "apksigner"
-    }
+    },
+    allowMixedContent: true
   }
 };
 
