@@ -99,12 +99,16 @@ export function AppHeader({ title, subtitle, onNavigateToProfile }: AppHeaderPro
           userId: user.id,
           error
         })
+        setNotificationsError(`Failed to load notifications: ${error.message}`)
+        setNotifications([])
+        setUnreadCount(0)
         return
       }
 
       console.log('Notifications fetched successfully:', data?.length || 0, 'notifications')
       setNotifications(data || [])
       setUnreadCount(data?.filter(n => !n.read).length || 0)
+      setNotificationsError(null) // Clear any previous errors
     } catch (error) {
       console.error('Unexpected error fetching notifications:', {
         message: error instanceof Error ? error.message : 'Unknown error',
