@@ -65,9 +65,9 @@ interface FinancialState {
 }
 
 // Helper function to get current user ID
-const getCurrentUserId = () => {
-  const user = supabase.auth.getUser()
-  return user ? user.data?.user?.id : null
+const getCurrentUserId = async () => {
+  const { data } = await supabase.auth.getUser()
+  return data?.user?.id || null
 }
 
 export const useFinancialStore = create<FinancialState>()(
@@ -78,13 +78,6 @@ export const useFinancialStore = create<FinancialState>()(
       goals: [],
       monthlyBudget: 0,
       // Transaction actions
-      addTransaction: (transaction) => set((state) => ({
-        transactions: [
-          ...state.transactions,
-          { ...transaction, id: Date.now().toString() }
-        ]
-      })),
-
       addTransaction: async (transaction) => {
         const newTransaction = { ...transaction, id: Date.now().toString() }
         
@@ -118,10 +111,6 @@ export const useFinancialStore = create<FinancialState>()(
         }
       },
 
-      deleteTransaction: (id) => set((state) => ({
-        transactions: state.transactions.filter(t => t.id !== id)
-      })),
-
       deleteTransaction: async (id) => {
         // Remove from local state first
         set((state) => ({
@@ -142,12 +131,6 @@ export const useFinancialStore = create<FinancialState>()(
           console.error('Error deleting transaction:', error)
         }
       },
-
-      updateTransaction: (id, updates) => set((state) => ({
-        transactions: state.transactions.map(t => 
-          t.id === id ? { ...t, ...updates } : t
-        )
-      })),
 
       updateTransaction: async (id, updates) => {
         // Update local state first
@@ -178,13 +161,6 @@ export const useFinancialStore = create<FinancialState>()(
       },
 
       // Budget actions
-      addBudget: (budget) => set((state) => ({
-        budgets: [
-          ...state.budgets,
-          { ...budget, id: Date.now().toString() }
-        ]
-      })),
-
       addBudget: async (budget) => {
         const newBudget = { ...budget, id: Date.now().toString() }
         
@@ -217,12 +193,6 @@ export const useFinancialStore = create<FinancialState>()(
         }
       },
 
-      updateBudget: (id, updates) => set((state) => ({
-        budgets: state.budgets.map(b => 
-          b.id === id ? { ...b, ...updates } : b
-        )
-      })),
-
       updateBudget: async (id, updates) => {
         // Update local state first
         set((state) => ({
@@ -252,10 +222,6 @@ export const useFinancialStore = create<FinancialState>()(
         }
       },
 
-      deleteBudget: (id) => set((state) => ({
-        budgets: state.budgets.filter(b => b.id !== id)
-      })),
-
       deleteBudget: async (id) => {
         // Remove from local state first
         set((state) => ({
@@ -278,13 +244,6 @@ export const useFinancialStore = create<FinancialState>()(
       },
 
       // Goal actions
-      addGoal: (goal) => set((state) => ({
-        goals: [
-          ...state.goals,
-          { ...goal, id: Date.now().toString() }
-        ]
-      })),
-
       addGoal: async (goal) => {
         const newGoal = { ...goal, id: Date.now().toString() }
         
@@ -318,12 +277,6 @@ export const useFinancialStore = create<FinancialState>()(
         }
       },
 
-      updateGoal: (id, updates) => set((state) => ({
-        goals: state.goals.map(g => 
-          g.id === id ? { ...g, ...updates } : g
-        )
-      })),
-
       updateGoal: async (id, updates) => {
         // Update local state first
         set((state) => ({
@@ -353,10 +306,6 @@ export const useFinancialStore = create<FinancialState>()(
           console.error('Error updating goal:', error)
         }
       },
-
-      deleteGoal: (id) => set((state) => ({
-        goals: state.goals.filter(g => g.id !== id)
-      })),
 
       deleteGoal: async (id) => {
         // Remove from local state first
@@ -439,7 +388,6 @@ export const useFinancialStore = create<FinancialState>()(
         })
         
         return status
-      }
       },
 
       // Sync functions
@@ -517,6 +465,7 @@ export const useFinancialStore = create<FinancialState>()(
       syncWithSupabase: async () => {
         const { loadFromSupabase } = get()
         await loadFromSupabase()
+      }
     }),
     {
       name: 'smartspend-storage',

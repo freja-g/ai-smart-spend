@@ -18,7 +18,8 @@ import {
   Trash2,
   Save,
   Loader2,
-  LogOut
+  LogOut,
+  FileUp
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { useToast } from "@/hooks/use-toast"
