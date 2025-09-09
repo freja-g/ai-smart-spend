@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { clearFinancialData } from '@/store/financial-store';
+import { clearFinancialData, useFinancialStore } from '@/store/financial-store';
 
 interface AuthContextType {
   user: User | null;
@@ -33,18 +33,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Load user data when signed in
+        if (event === 'SIGNED_IN' && session?.user) {
+          try {
+            await useFinancialStore.getState().loadFromSupabase();
+          } catch (error) {
+            console.error('Error loading user data:', error);
+          }
+        }
+        
+        // Clear data when signed out
+        if (event === 'SIGNED_OUT') {
+          clearFinancialData();
+        }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Load existing user data if already signed in
+      if (session?.user) {
+        try {
+          await useFinancialStore.getState().loadFromSupabase();
+        } catch (error) {
+          console.error('Error loading existing user data:', error);
+        }
+      }
     });
 
     return () => subscription.unsubscribe();

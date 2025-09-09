@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { supabase } from '@/integrations/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
 
 export interface Transaction {
   id: string
@@ -56,6 +58,16 @@ interface FinancialState {
   getBalance: () => number
   getSpendingByCategory: () => { [key: string]: number }
   getBudgetStatus: () => { [key: string]: { spent: number; budgeted: number; remaining: number } }
+  
+  // Sync actions
+  syncWithSupabase: () => Promise<void>
+  loadFromSupabase: () => Promise<void>
+}
+
+// Helper function to get current user ID
+const getCurrentUserId = () => {
+  const user = supabase.auth.getUser()
+  return user ? user.data?.user?.id : null
 }
 
 export const useFinancialStore = create<FinancialState>()(
@@ -73,15 +85,97 @@ export const useFinancialStore = create<FinancialState>()(
         ]
       })),
 
+      addTransaction: async (transaction) => {
+        const newTransaction = { ...transaction, id: Date.now().toString() }
+        
+        // Add to local state first
+        set((state) => ({
+          transactions: [...state.transactions, newTransaction]
+        }))
+
+        // Sync to Supabase
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const { error } = await supabase
+              .from('transactions')
+              .insert({
+                id: newTransaction.id,
+                user_id: user.id,
+                description: newTransaction.description,
+                amount: newTransaction.amount,
+                category: newTransaction.category,
+                date: newTransaction.date.toISOString().split('T')[0],
+                type: newTransaction.type
+              })
+            
+            if (error) {
+              console.error('Error syncing transaction to Supabase:', error)
+            }
+          }
+        } catch (error) {
+          console.error('Error syncing transaction:', error)
+        }
+      },
+
       deleteTransaction: (id) => set((state) => ({
         transactions: state.transactions.filter(t => t.id !== id)
       })),
+
+      deleteTransaction: async (id) => {
+        // Remove from local state first
+        set((state) => ({
+          transactions: state.transactions.filter(t => t.id !== id)
+        }))
+
+        // Sync to Supabase
+        try {
+          const { error } = await supabase
+            .from('transactions')
+            .delete()
+            .eq('id', id)
+          
+          if (error) {
+            console.error('Error deleting transaction from Supabase:', error)
+          }
+        } catch (error) {
+          console.error('Error deleting transaction:', error)
+        }
+      },
 
       updateTransaction: (id, updates) => set((state) => ({
         transactions: state.transactions.map(t => 
           t.id === id ? { ...t, ...updates } : t
         )
       })),
+
+      updateTransaction: async (id, updates) => {
+        // Update local state first
+        set((state) => ({
+          transactions: state.transactions.map(t => 
+            t.id === id ? { ...t, ...updates } : t
+          )
+        }))
+
+        // Sync to Supabase
+        try {
+          const updateData: any = { ...updates }
+          if (updateData.date) {
+            updateData.date = updateData.date.toISOString().split('T')[0]
+          }
+          
+          const { error } = await supabase
+            .from('transactions')
+            .update(updateData)
+            .eq('id', id)
+          
+          if (error) {
+            console.error('Error updating transaction in Supabase:', error)
+          }
+        } catch (error) {
+          console.error('Error updating transaction:', error)
+        }
+      },
 
       // Budget actions
       addBudget: (budget) => set((state) => ({
@@ -91,15 +185,97 @@ export const useFinancialStore = create<FinancialState>()(
         ]
       })),
 
+      addBudget: async (budget) => {
+        const newBudget = { ...budget, id: Date.now().toString() }
+        
+        // Add to local state first
+        set((state) => ({
+          budgets: [...state.budgets, newBudget]
+        }))
+
+        // Sync to Supabase
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const { error } = await supabase
+              .from('budget_items')
+              .insert({
+                id: newBudget.id,
+                user_id: user.id,
+                category: newBudget.category,
+                budgeted_amount: newBudget.budgeted,
+                spent_amount: newBudget.spent,
+                month: newBudget.month
+              })
+            
+            if (error) {
+              console.error('Error syncing budget to Supabase:', error)
+            }
+          }
+        } catch (error) {
+          console.error('Error syncing budget:', error)
+        }
+      },
+
       updateBudget: (id, updates) => set((state) => ({
         budgets: state.budgets.map(b => 
           b.id === id ? { ...b, ...updates } : b
         )
       })),
 
+      updateBudget: async (id, updates) => {
+        // Update local state first
+        set((state) => ({
+          budgets: state.budgets.map(b => 
+            b.id === id ? { ...b, ...updates } : b
+          )
+        }))
+
+        // Sync to Supabase
+        try {
+          const updateData: any = {}
+          if (updates.budgeted !== undefined) updateData.budgeted_amount = updates.budgeted
+          if (updates.spent !== undefined) updateData.spent_amount = updates.spent
+          if (updates.category !== undefined) updateData.category = updates.category
+          if (updates.month !== undefined) updateData.month = updates.month
+          
+          const { error } = await supabase
+            .from('budget_items')
+            .update(updateData)
+            .eq('id', id)
+          
+          if (error) {
+            console.error('Error updating budget in Supabase:', error)
+          }
+        } catch (error) {
+          console.error('Error updating budget:', error)
+        }
+      },
+
       deleteBudget: (id) => set((state) => ({
         budgets: state.budgets.filter(b => b.id !== id)
       })),
+
+      deleteBudget: async (id) => {
+        // Remove from local state first
+        set((state) => ({
+          budgets: state.budgets.filter(b => b.id !== id)
+        }))
+
+        // Sync to Supabase
+        try {
+          const { error } = await supabase
+            .from('budget_items')
+            .delete()
+            .eq('id', id)
+          
+          if (error) {
+            console.error('Error deleting budget from Supabase:', error)
+          }
+        } catch (error) {
+          console.error('Error deleting budget:', error)
+        }
+      },
 
       // Goal actions
       addGoal: (goal) => set((state) => ({
@@ -109,15 +285,100 @@ export const useFinancialStore = create<FinancialState>()(
         ]
       })),
 
+      addGoal: async (goal) => {
+        const newGoal = { ...goal, id: Date.now().toString() }
+        
+        // Add to local state first
+        set((state) => ({
+          goals: [...state.goals, newGoal]
+        }))
+
+        // Sync to Supabase
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const { error } = await supabase
+              .from('savings_goals')
+              .insert({
+                id: newGoal.id,
+                user_id: user.id,
+                name: newGoal.name,
+                target_amount: newGoal.targetAmount,
+                current_amount: newGoal.currentAmount,
+                deadline: newGoal.deadline.toISOString().split('T')[0],
+                description: newGoal.description
+              })
+            
+            if (error) {
+              console.error('Error syncing goal to Supabase:', error)
+            }
+          }
+        } catch (error) {
+          console.error('Error syncing goal:', error)
+        }
+      },
+
       updateGoal: (id, updates) => set((state) => ({
         goals: state.goals.map(g => 
           g.id === id ? { ...g, ...updates } : g
         )
       })),
 
+      updateGoal: async (id, updates) => {
+        // Update local state first
+        set((state) => ({
+          goals: state.goals.map(g => 
+            g.id === id ? { ...g, ...updates } : g
+          )
+        }))
+
+        // Sync to Supabase
+        try {
+          const updateData: any = {}
+          if (updates.name !== undefined) updateData.name = updates.name
+          if (updates.targetAmount !== undefined) updateData.target_amount = updates.targetAmount
+          if (updates.currentAmount !== undefined) updateData.current_amount = updates.currentAmount
+          if (updates.deadline !== undefined) updateData.deadline = updates.deadline.toISOString().split('T')[0]
+          if (updates.description !== undefined) updateData.description = updates.description
+          
+          const { error } = await supabase
+            .from('savings_goals')
+            .update(updateData)
+            .eq('id', id)
+          
+          if (error) {
+            console.error('Error updating goal in Supabase:', error)
+          }
+        } catch (error) {
+          console.error('Error updating goal:', error)
+        }
+      },
+
       deleteGoal: (id) => set((state) => ({
         goals: state.goals.filter(g => g.id !== id)
       })),
+
+      deleteGoal: async (id) => {
+        // Remove from local state first
+        set((state) => ({
+          goals: state.goals.filter(g => g.id !== id)
+        }))
+
+        // Sync to Supabase
+        try {
+          const { error } = await supabase
+            .from('savings_goals')
+            .delete()
+            .eq('id', id)
+          
+          if (error) {
+            console.error('Error deleting goal from Supabase:', error)
+          }
+        } catch (error) {
+          console.error('Error deleting goal:', error)
+        }
+      },
+
       setMonthlyBudget: (amount) => set({ monthlyBudget: amount }),
 
       getBudgetedExpenses: () => {
@@ -179,6 +440,83 @@ export const useFinancialStore = create<FinancialState>()(
         
         return status
       }
+      },
+
+      // Sync functions
+      loadFromSupabase: async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (!user) return
+
+          // Load transactions
+          const { data: transactions, error: transactionsError } = await supabase
+            .from('transactions')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+
+          if (transactionsError) {
+            console.error('Error loading transactions:', transactionsError)
+          } else if (transactions) {
+            const formattedTransactions = transactions.map(t => ({
+              id: t.id,
+              description: t.description,
+              amount: t.amount,
+              category: t.category,
+              date: new Date(t.date),
+              type: t.type as 'income' | 'expense'
+            }))
+            set({ transactions: formattedTransactions })
+          }
+
+          // Load budget items
+          const { data: budgets, error: budgetsError } = await supabase
+            .from('budget_items')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+
+          if (budgetsError) {
+            console.error('Error loading budgets:', budgetsError)
+          } else if (budgets) {
+            const formattedBudgets = budgets.map(b => ({
+              id: b.id,
+              category: b.category,
+              budgeted: b.budgeted_amount,
+              spent: b.spent_amount,
+              month: b.month
+            }))
+            set({ budgets: formattedBudgets })
+          }
+
+          // Load savings goals
+          const { data: goals, error: goalsError } = await supabase
+            .from('savings_goals')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+
+          if (goalsError) {
+            console.error('Error loading goals:', goalsError)
+          } else if (goals) {
+            const formattedGoals = goals.map(g => ({
+              id: g.id,
+              name: g.name,
+              targetAmount: g.target_amount,
+              currentAmount: g.current_amount,
+              deadline: new Date(g.deadline),
+              description: g.description
+            }))
+            set({ goals: formattedGoals })
+          }
+        } catch (error) {
+          console.error('Error loading data from Supabase:', error)
+        }
+      },
+
+      syncWithSupabase: async () => {
+        const { loadFromSupabase } = get()
+        await loadFromSupabase()
     }),
     {
       name: 'smartspend-storage',
@@ -198,7 +536,8 @@ export const clearFinancialData = () => {
   useFinancialStore.setState({
     transactions: [],
     budgets: [],
-    goals: []
+    goals: [],
+    monthlyBudget: 0
   })
 }
 
